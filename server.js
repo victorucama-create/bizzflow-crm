@@ -1,499 +1,640 @@
+// ==============================================
+// BIZZFLOW CRM v2.0 - SERVER COM POSTGRESQL
+// ==============================================
 const express = require('express');
-const path = require('path');
-const fs = require('fs');
+const { Pool } = require('pg');
 const cors = require('cors');
-const compression = require('compression');
-const helmet = require('helmet');
-const morgan = require('morgan');
-const rateLimit = require('express-rate-limit');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const path = require('path');
+require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-const NODE_ENV = process.env.NODE_ENV || 'development';
+const PORT = process.env.PORT || 10000;
 
-// ======================
-// CONFIGURAÇÕES DE SEGURANÇA
-// ======================
-
-// Rate Limiting
-const apiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutos
-    max: 100, // limite por IP
-    message: {
-        success: false,
-        error: 'Muitas requisições. Tente novamente em 15 minutos.'
-    },
-    standardHeaders: true,
-    legacyHeaders: false
+// ==============================================
+// CONFIGURAÇÃO
+// ==============================================
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
-const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 10, // Apenas 10 tentativas de login por IP
-    message: {
-        success: false,
-        error: 'Muitas tentativas de login. Tente novamente mais tarde.'
-    }
-});
-
-// Helmet - Headers de segurança
-app.use(helmet({
-    contentSecurityPolicy: {
-        directives: {
-            defaultSrc: ["'self'"],
-            styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
-            fontSrc: ["'self'", "https://cdnjs.cloudflare.com"],
-            imgSrc: ["'self'", "data:", "https:"],
-            connectSrc: ["'self'"]
-        }
-    },
-    crossOriginEmbedderPolicy: false,
-    crossOriginResourcePolicy: { policy: "cross-origin" }
-}));
-
-// ======================
+// ==============================================
 // MIDDLEWARE
-// ======================
-
-// Compression
-app.use(compression());
-
-// CORS
+// ==============================================
 app.use(cors({
-    origin: NODE_ENV === 'production' 
-        ? ['https://bizzflow-crm.onrender.com'] 
-        : ['http://localhost:3000', 'http://localhost:8080'],
-    credentials: true
+  origin: ['https://bizzflow-crm.onrender.com', 'http://localhost:3000'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 }));
 
-// Logging
-if (NODE_ENV === 'development') {
-    app.use(morgan('dev'));
-} else {
-    app.use(morgan('combined', {
-        skip: (req, res) => res.statusCode < 400
-    }));
-}
-
-// Parse JSON e URL encoded
 app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
 
-// ======================
-// BLOQUEIO DE REQUISIÇÕES EXTERNAS
-// ======================
-
-// Middleware para bloquear requisições externas indesejadas
+// Headers de segurança
 app.use((req, res, next) => {
-    const blockedDomains = [
-        'gravatar.com',
-        'gravatar.githubusercontent.com',
-        'en.gravatar.com',
-        'www.gravatar.com',
-        'secure.gravatar.com'
-    ];
-    
-    const referer = req.get('referer') || '';
-    const host = req.get('host') || '';
-    
-    // Bloquear requisições para Gravatar e outros serviços externos
-    if (req.url.includes('avatar') || blockedDomains.some(domain => req.url.includes(domain))) {
-        console.log(`🚫 Bloqueada requisição externa: ${req.method} ${req.url} | Referer: ${referer}`);
-        
-        // Retornar avatar local em vez de 404
-        if (req.url.includes('avatar')) {
-            return res.redirect(`/api/avatar/default?s=20`);
-        }
-        
-        return res.status(404).json({
-            success: false,
-            error: 'Recurso externo bloqueado por segurança',
-            message: 'Este serviço está configurado para usar apenas recursos locais'
-        });
-    }
-    
-    next();
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
+  next();
 });
 
-// ======================
-// SISTEMA DE AVATARES LOCAL
-// ======================
+// ==============================================
+// ROTAS PÚBLICAS
+// ==============================================
 
-// Gerador de avatares SVG
-app.get('/api/avatar/:userId', (req, res) => {
-    try {
-        const userId = req.params.userId || 'default';
-        const size = parseInt(req.query.s) || 100;
-        const text = req.query.text || userId.charAt(0).toUpperCase();
-        
-        // Paleta de cores do Bizz Flow
-        const colorPalette = [
-            '#1a5f7a', // Bizz Flow primary
-            '#2a9d8f', // Bizz Flow secondary
-            '#e9c46a', // Bizz Flow accent
-            '#f4a261', // Bizz Flow warning
-            '#e76f51', // Bizz Flow danger
-            '#264653', // Bizz Flow dark
-            '#2a9d8f', // Bizz Flow success
-        ];
-        
-        // Gerar cor baseada no userId
-        let hash = 0;
-        for (let i = 0; i < userId.length; i++) {
-            hash = userId.charCodeAt(i) + ((hash << 5) - hash);
-        }
-        const colorIndex = Math.abs(hash) % colorPalette.length;
-        const color = colorPalette[colorIndex];
-        
-        // Criar SVG do avatar
-        const svg = `<?xml version="1.0" encoding="UTF-8"?>
-<svg width="${size}" height="${size}" viewBox="0 0 100 100" version="1.1" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:${color};stop-opacity:1" />
-            <stop offset="100%" style="stop-color:${color}99;stop-opacity:1" />
-        </linearGradient>
-    </defs>
-    <circle cx="50" cy="50" r="45" fill="url(#gradient)" stroke="#ffffff" stroke-width="2"/>
-    <text x="50" y="58" text-anchor="middle" fill="#ffffff" font-size="40" font-family="Arial, sans-serif" font-weight="bold">
-        ${text}
-    </text>
-</svg>`;
-        
-        res.setHeader('Content-Type', 'image/svg+xml');
-        res.setHeader('Cache-Control', 'public, max-age=604800'); // Cache de 7 dias
-        res.send(svg);
-        
-    } catch (error) {
-        console.error('Erro ao gerar avatar:', error);
-        res.status(500).send('Erro ao gerar avatar');
-    }
-});
-
-// Avatar padrão para usuários sem avatar
-app.get('/avatar/default', (req, res) => {
-    const size = parseInt(req.query.s) || 100;
-    
-    const defaultAvatar = `<?xml version="1.0" encoding="UTF-8"?>
-<svg width="${size}" height="${size}" viewBox="0 0 100 100" version="1.1" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="50" cy="50" r="45" fill="#1a5f7a"/>
-    <path d="M50,30 A20,20 0 1,1 50,70 A20,20 0 1,1 50,30" fill="#ffffff"/>
-    <circle cx="50" cy="40" r="8" fill="#1a5f7a"/>
-    <path d="M40,65 Q50,75 60,65" stroke="#ffffff" stroke-width="3" fill="none"/>
-</svg>`;
-    
-    res.setHeader('Content-Type', 'image/svg+xml');
-    res.setHeader('Cache-Control', 'public, max-age=604800');
-    res.send(defaultAvatar);
-});
-
-// ======================
-// SERVIR ARQUIVOS ESTÁTICOS
-// ======================
-
-// Servir arquivos estáticos com cache inteligente
-app.use(express.static(path.join(__dirname), {
-    maxAge: NODE_ENV === 'production' ? '1y' : '0',
-    setHeaders: (res, filepath) => {
-        const ext = path.extname(filepath);
-        
-        // Configurações de cache por tipo de arquivo
-        if (ext === '.html') {
-            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-        } else if (['.css', '.js', '.svg', '.png', '.jpg'].includes(ext)) {
-            res.setHeader('Cache-Control', 'public, max-age=31536000'); // 1 ano
-        }
-    }
-}));
-
-// ======================
-// BANCO DE DADOS
-// ======================
-
-const db = require('./database');
-
-// Middleware para injetar db em todas as requisições
-app.use((req, res, next) => {
-    req.db = db;
-    next();
-});
-
-// ======================
-// ROTAS
-// ======================
-
-// Importar rotas
-const apiRoutes = require('./routes/api');
-const adminRoutes = require('./routes/admin');
-
-// Aplicar rate limiting
-app.use('/api/auth', authLimiter);
-app.use('/api', apiLimiter);
-
-// Usar rotas
-app.use('/api', apiRoutes);
-app.use('/admin/api', adminRoutes);
-
-// ======================
-// ROTAS PRINCIPAIS
-// ======================
-
-// Health Check - Otimizado para Render.com
+// Health Check
 app.get('/health', async (req, res) => {
-    try {
-        // Testar conexão com banco de forma não-bloqueante
-        const dbCheck = new Promise((resolve) => {
-            setTimeout(() => resolve({ status: 'timeout', message: 'Database check timeout' }), 2000);
-            
-            req.db.getStats()
-                .then(stats => resolve({ status: 'connected', stats }))
-                .catch(err => resolve({ status: 'error', error: err.message }));
-        });
-        
-        const dbResult = await dbCheck;
-        
-        const healthData = {
-            status: dbResult.status === 'connected' ? 'healthy' : 'degraded',
-            timestamp: new Date().toISOString(),
-            uptime: process.uptime(),
-            environment: NODE_ENV,
-            version: '2.0.0',
-            database: dbResult.status,
-            memory: {
-                used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
-                total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024),
-                rss: Math.round(process.memoryUsage().rss / 1024 / 1024)
-            },
-            ...(dbResult.stats && { stats: dbResult.stats })
-        };
-        
-        res.status(dbResult.status === 'connected' ? 200 : 503).json(healthData);
-        
-    } catch (error) {
-        res.status(500).json({
-            status: 'unhealthy',
-            error: error.message,
-            timestamp: new Date().toISOString()
-        });
-    }
+  try {
+    await pool.query('SELECT 1');
+    res.json({
+      status: 'ok',
+      service: 'BizzFlow CRM API',
+      database: 'connected',
+      timestamp: new Date().toISOString(),
+      version: '2.0.0'
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      service: 'BizzFlow CRM API',
+      database: 'disconnected',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
-// Status do sistema (lightweight)
-app.get('/status', async (req, res) => {
-    try {
-        const stats = await req.db.getStats();
-        
-        res.json({
-            success: true,
-            data: {
-                app: 'Bizz Flow CRM',
-                version: '2.0.0',
-                environment: NODE_ENV,
-                timestamp: new Date().toISOString(),
-                uptime: process.uptime(),
-                stats: stats
-            }
-        });
-    } catch (error) {
-        res.status(500).json({ 
-            success: false, 
-            error: error.message,
-            timestamp: new Date().toISOString()
-        });
-    }
+// Status do sistema
+app.get('/status', (req, res) => {
+  res.json({
+    status: 'online',
+    service: 'BizzFlow CRM',
+    version: '2.0.0',
+    environment: process.env.NODE_ENV || 'development',
+    database: 'PostgreSQL',
+    timestamp: new Date().toISOString()
+  });
 });
 
-// Rota principal - sempre por último
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
+// ==============================================
+// API - AUTENTICAÇÃO
+// ==============================================
 
-// ======================
-// MIDDLEWARE DE ERRO
-// ======================
-
-// Rota não encontrada
-app.use((req, res, next) => {
-    res.status(404).json({
+// Login
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    if (!email || !password) {
+      return res.status(400).json({
         success: false,
-        error: 'Rota não encontrada',
-        path: req.path,
-        timestamp: new Date().toISOString(),
-        suggestion: 'Verifique a documentação da API em /api/status'
-    });
-});
-
-// Manipulador de erros global
-app.use((err, req, res, next) => {
-    console.error('Erro:', {
-        message: err.message,
-        stack: err.stack,
-        url: req.url,
-        method: req.method,
-        ip: req.ip,
-        timestamp: new Date().toISOString()
-    });
-    
-    // Log em arquivo
-    if (NODE_ENV === 'production') {
-        const logDir = path.join(__dirname, 'logs');
-        if (!fs.existsSync(logDir)) {
-            fs.mkdirSync(logDir, { recursive: true });
-        }
-        
-        const logFile = path.join(logDir, 'errors.log');
-        const logEntry = `${new Date().toISOString()} - ${req.method} ${req.path} - ${err.message}\nStack: ${err.stack}\n\n`;
-        
-        fs.appendFileSync(logFile, logEntry, 'utf8');
+        message: 'Email e senha são obrigatórios.'
+      });
     }
 
-    const errorResponse = {
+    // Buscar usuário
+    const result = await pool.query(
+      'SELECT * FROM users WHERE email = $1',
+      [email.toLowerCase()]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(401).json({
         success: false,
-        error: NODE_ENV === 'development' ? err.message : 'Erro interno do servidor',
-        timestamp: new Date().toISOString(),
-        requestId: Date.now().toString(36) + Math.random().toString(36).substr(2)
-    };
-    
-    // Adicionar stack apenas em desenvolvimento
-    if (NODE_ENV === 'development') {
-        errorResponse.stack = err.stack;
+        message: 'Email ou senha incorretos.'
+      });
     }
     
-    res.status(err.status || 500).json(errorResponse);
+    const user = result.rows[0];
+    
+    // Verificar senha
+    const isValid = await bcrypt.compare(password, user.password);
+    
+    if (!isValid) {
+      return res.status(401).json({
+        success: false,
+        message: 'Email ou senha incorretos.'
+      });
+    }
+
+    // Gerar token
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, role: user.role },
+      process.env.JWT_SECRET || 'secret-key',
+      { expiresIn: '7d' }
+    );
+
+    // Atualizar último login
+    await pool.query(
+      'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1',
+      [user.id]
+    );
+
+    // Remover senha da resposta
+    const { password: _, ...userWithoutPassword } = user;
+    
+    res.json({
+      success: true,
+      token,
+      user: userWithoutPassword,
+      message: 'Login realizado com sucesso!'
+    });
+    
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erro ao realizar login.'
+    });
+  }
 });
 
-// ======================
-// INICIALIZAÇÃO E CONFIGURAÇÃO
-// ======================
+// ==============================================
+// API - CLIENTES
+// ==============================================
 
-// Criar diretórios necessários
-function ensureDirectories() {
-    const requiredDirs = [
-        'data',          // Banco de dados SQLite
-        'backups',       // Backups do sistema
-        'logs',          // Logs de aplicação
-        'uploads',       // Para futuros uploads
-        'temp'           // Arquivos temporários
-    ];
+// Listar clientes
+app.get('/api/clients', async (req, res) => {
+  try {
+    const { search = '', limit = 100, offset = 0 } = req.query;
     
-    requiredDirs.forEach(dir => {
-        const dirPath = path.join(__dirname, dir);
-        if (!fs.existsSync(dirPath)) {
-            fs.mkdirSync(dirPath, { recursive: true });
-            console.log(`📁 Criado diretório: ${dir}`);
-        }
+    let query = 'SELECT * FROM clients WHERE 1=1';
+    const params = [];
+    let paramCount = 1;
+    
+    if (search) {
+      query += ` AND (name ILIKE $${paramCount} OR email ILIKE $${paramCount} OR phone ILIKE $${paramCount})`;
+      params.push(`%${search}%`);
+      paramCount++;
+    }
+    
+    query += ` ORDER BY created_at DESC LIMIT $${paramCount} OFFSET $${paramCount + 1}`;
+    params.push(parseInt(limit), parseInt(offset));
+    
+    const result = await pool.query(query, params);
+    
+    res.json({
+      success: true,
+      clients: result.rows,
+      total: result.rowCount
     });
+    
+  } catch (error) {
+    console.error('Get clients error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erro ao buscar clientes.'
+    });
+  }
+});
+
+// Criar cliente
+app.post('/api/clients', async (req, res) => {
+  try {
+    const { name, email, phone, address, city, province, category } = req.body;
+    
+    if (!name) {
+      return res.status(400).json({
+        success: false,
+        message: 'Nome é obrigatório.'
+      });
+    }
+    
+    const result = await pool.query(
+      `INSERT INTO clients (name, email, phone, address, city, province, category)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING *`,
+      [name, email, phone, address, city, province, category || 'normal']
+    );
+    
+    res.status(201).json({
+      success: true,
+      client: result.rows[0],
+      message: 'Cliente criado com sucesso!'
+    });
+    
+  } catch (error) {
+    console.error('Create client error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erro ao criar cliente.'
+    });
+  }
+});
+
+// ==============================================
+// API - PRODUTOS
+// ==============================================
+
+// Listar produtos
+app.get('/api/products', async (req, res) => {
+  try {
+    const { search = '', limit = 100, offset = 0 } = req.query;
+    
+    let query = 'SELECT * FROM products WHERE is_active = true';
+    const params = [];
+    let paramCount = 1;
+    
+    if (search) {
+      query += ` AND (name ILIKE $${paramCount} OR code ILIKE $${paramCount} OR description ILIKE $${paramCount})`;
+      params.push(`%${search}%`);
+      paramCount++;
+    }
+    
+    query += ` ORDER BY created_at DESC LIMIT $${paramCount} OFFSET $${paramCount + 1}`;
+    params.push(parseInt(limit), parseInt(offset));
+    
+    const result = await pool.query(query, params);
+    
+    res.json({
+      success: true,
+      products: result.rows,
+      total: result.rowCount
+    });
+    
+  } catch (error) {
+    console.error('Get products error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erro ao buscar produtos.'
+    });
+  }
+});
+
+// Criar produto
+app.post('/api/products', async (req, res) => {
+  try {
+    const { code, name, description, category, unit_price, stock, min_stock } = req.body;
+    
+    if (!code || !name || !unit_price) {
+      return res.status(400).json({
+        success: false,
+        message: 'Código, nome e preço são obrigatórios.'
+      });
+    }
+    
+    const result = await pool.query(
+      `INSERT INTO products (code, name, description, category, unit_price, stock, min_stock)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING *`,
+      [code, name, description, category, unit_price, stock || 0, min_stock || 10]
+    );
+    
+    res.status(201).json({
+      success: true,
+      product: result.rows[0],
+      message: 'Produto criado com sucesso!'
+    });
+    
+  } catch (error) {
+    console.error('Create product error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erro ao criar produto.'
+    });
+  }
+});
+
+// ==============================================
+// API - VENDAS
+// ==============================================
+
+// Criar venda
+app.post('/api/sales', async (req, res) => {
+  try {
+    const { client_id, items, discount = 0, tax = 0, payment_method = 'cash', notes = '' } = req.body;
+    
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'É necessário pelo menos um item para a venda.'
+      });
+    }
+    
+    // Calcular totais
+    let subtotal = 0;
+    for (const item of items) {
+      const productResult = await pool.query(
+        'SELECT unit_price, stock FROM products WHERE id = $1',
+        [item.product_id]
+      );
+      
+      if (productResult.rows.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: `Produto ID ${item.product_id} não encontrado.`
+        });
+      }
+      
+      const product = productResult.rows[0];
+      
+      if (product.stock < item.quantity) {
+        return res.status(400).json({
+          success: false,
+          message: `Estoque insuficiente para produto ID ${item.product_id}. Disponível: ${product.stock}`
+        });
+      }
+      
+      subtotal += product.unit_price * item.quantity;
+    }
+    
+    const total_amount = subtotal;
+    const final_amount = subtotal - discount + tax;
+    
+    // Gerar número da venda
+    const date = new Date();
+    const saleNumber = `V${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
+    
+    // Iniciar transação
+    const client = await pool.connect();
+    
+    try {
+      await client.query('BEGIN');
+      
+      // Inserir venda
+      const saleResult = await client.query(
+        `INSERT INTO sales (sale_number, client_id, total_amount, discount, tax, final_amount, payment_method, notes)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         RETURNING *`,
+        [saleNumber, client_id, total_amount, discount, tax, final_amount, payment_method, notes]
+      );
+      
+      const sale = saleResult.rows[0];
+      
+      // Inserir itens e atualizar estoque
+      for (const item of items) {
+        const product = await client.query(
+          'SELECT unit_price FROM products WHERE id = $1',
+          [item.product_id]
+        );
+        
+        const unitPrice = product.rows[0].unit_price;
+        
+        // Inserir item
+        await client.query(
+          `INSERT INTO sale_items (sale_id, product_id, quantity, unit_price, total_price)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [sale.id, item.product_id, item.quantity, unitPrice, unitPrice * item.quantity]
+        );
+        
+        // Atualizar estoque
+        await client.query(
+          'UPDATE products SET stock = stock - $1 WHERE id = $2',
+          [item.quantity, item.product_id]
+        );
+      }
+      
+      // Atualizar cliente
+      if (client_id) {
+        await client.query(
+          `UPDATE clients 
+           SET total_spent = total_spent + $1, last_purchase = CURRENT_DATE
+           WHERE id = $2`,
+          [final_amount, client_id]
+        );
+      }
+      
+      await client.query('COMMIT');
+      
+      res.status(201).json({
+        success: true,
+        sale,
+        message: 'Venda realizada com sucesso!'
+      });
+      
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+    
+  } catch (error) {
+    console.error('Create sale error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erro ao realizar venda.'
+    });
+  }
+});
+
+// ==============================================
+// API - DASHBOARD
+// ==============================================
+
+// Métricas do dashboard
+app.get('/api/dashboard/metrics', async (req, res) => {
+  try {
+    const [salesToday, revenueToday, totalClients, totalProducts, lowStock] = await Promise.all([
+      pool.query("SELECT COUNT(*) FROM sales WHERE DATE(sale_date) = CURRENT_DATE"),
+      pool.query("SELECT COALESCE(SUM(final_amount), 0) FROM sales WHERE DATE(sale_date) = CURRENT_DATE"),
+      pool.query("SELECT COUNT(*) FROM clients"),
+      pool.query("SELECT COUNT(*) FROM products WHERE is_active = true"),
+      pool.query("SELECT COUNT(*) FROM products WHERE stock <= min_stock AND is_active = true")
+    ]);
+    
+    res.json({
+      success: true,
+      metrics: {
+        sales_today: parseInt(salesToday.rows[0].count),
+        revenue_today: parseFloat(revenueToday.rows[0].coalesce),
+        total_clients: parseInt(totalClients.rows[0].count),
+        total_products: parseInt(totalProducts.rows[0].count),
+        low_stock_items: parseInt(lowStock.rows[0].count)
+      }
+    });
+    
+  } catch (error) {
+    console.error('Dashboard metrics error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erro ao buscar métricas.'
+    });
+  }
+});
+
+// ==============================================
+// INICIALIZAÇÃO DO BANCO DE DADOS
+// ==============================================
+async function initializeDatabase() {
+  try {
+    console.log('🔄 Inicializando banco de dados...');
+    
+    // Criar tabelas
+    await pool.query(`
+      -- Usuários
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        email VARCHAR(100) UNIQUE NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        role VARCHAR(20) DEFAULT 'user',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        last_login TIMESTAMP,
+        is_active BOOLEAN DEFAULT TRUE
+      );
+      
+      -- Clientes
+      CREATE TABLE IF NOT EXISTS clients (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        email VARCHAR(100),
+        phone VARCHAR(20),
+        address TEXT,
+        city VARCHAR(50),
+        province VARCHAR(50),
+        category VARCHAR(50) DEFAULT 'normal',
+        total_spent DECIMAL(12, 2) DEFAULT 0,
+        last_purchase DATE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+      
+      -- Produtos
+      CREATE TABLE IF NOT EXISTS products (
+        id SERIAL PRIMARY KEY,
+        code VARCHAR(50) UNIQUE NOT NULL,
+        name VARCHAR(100) NOT NULL,
+        description TEXT,
+        category VARCHAR(50),
+        unit_price DECIMAL(12, 2) NOT NULL,
+        cost_price DECIMAL(12, 2),
+        stock INTEGER DEFAULT 0,
+        min_stock INTEGER DEFAULT 10,
+        supplier VARCHAR(100),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        is_active BOOLEAN DEFAULT TRUE
+      );
+      
+      -- Vendas
+      CREATE TABLE IF NOT EXISTS sales (
+        id SERIAL PRIMARY KEY,
+        sale_number VARCHAR(50) UNIQUE NOT NULL,
+        client_id INTEGER REFERENCES clients(id),
+        total_amount DECIMAL(12, 2) NOT NULL,
+        discount DECIMAL(12, 2) DEFAULT 0,
+        tax DECIMAL(12, 2) DEFAULT 0,
+        final_amount DECIMAL(12, 2) NOT NULL,
+        payment_method VARCHAR(50) DEFAULT 'cash',
+        status VARCHAR(20) DEFAULT 'completed',
+        notes TEXT,
+        sale_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+      
+      -- Itens da venda
+      CREATE TABLE IF NOT EXISTS sale_items (
+        id SERIAL PRIMARY KEY,
+        sale_id INTEGER REFERENCES sales(id) ON DELETE CASCADE,
+        product_id INTEGER REFERENCES products(id),
+        quantity INTEGER NOT NULL,
+        unit_price DECIMAL(12, 2) NOT NULL,
+        total_price DECIMAL(12, 2) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    
+    // Criar admin padrão se não existir
+    const adminExists = await pool.query(
+      "SELECT id FROM users WHERE email = 'admin@bizzflow.com'"
+    );
+    
+    if (adminExists.rows.length === 0) {
+      const hashedPassword = await bcrypt.hash('admin123', 10);
+      await pool.query(
+        `INSERT INTO users (name, email, password, role) 
+         VALUES ('Administrador', 'admin@bizzflow.com', $1, 'admin')`,
+        [hashedPassword]
+      );
+      console.log('👤 Usuário admin criado: admin@bizzflow.com / admin123');
+    }
+    
+    // Inserir dados de exemplo se não existirem
+    const clientsExist = await pool.query('SELECT COUNT(*) FROM clients');
+    if (parseInt(clientsExist.rows[0].count) === 0) {
+      await pool.query(`
+        INSERT INTO clients (name, email, phone, category) VALUES
+        ('João Silva', 'joao@email.com', '+258841234567', 'VIP'),
+        ('Maria Santos', 'maria@email.com', '+258842345678', 'normal'),
+        ('Empresa XYZ', 'contato@xyz.com', '+258843456789', 'corporate')
+      `);
+      console.log('👥 Clientes de exemplo criados');
+    }
+    
+    const productsExist = await pool.query('SELECT COUNT(*) FROM products');
+    if (parseInt(productsExist.rows[0].count) === 0) {
+      await pool.query(`
+        INSERT INTO products (code, name, category, unit_price, stock) VALUES
+        ('PROD001', 'Arroz 5kg', 'Alimentos', 350.00, 100),
+        ('PROD002', 'Azeite 1L', 'Alimentos', 850.00, 50),
+        ('PROD003', 'Detergente', 'Limpeza', 45.00, 200),
+        ('PROD004', 'Sabonete', 'Higiene', 25.00, 150)
+      `);
+      console.log('📦 Produtos de exemplo criados');
+    }
+    
+    console.log('✅ Banco de dados inicializado com sucesso!');
+    
+  } catch (error) {
+    console.error('❌ Erro ao inicializar banco de dados:', error.message);
+  }
 }
 
-// Configurar tratamento de shutdown
-function setupShutdownHandlers() {
-    const shutdownSignals = ['SIGINT', 'SIGTERM', 'SIGUSR2'];
-    
-    shutdownSignals.forEach(signal => {
-        process.on(signal, async () => {
-            console.log(`\n${signal} recebido. Encerrando servidor...`);
-            
-            try {
-                // Fechar conexões de banco
-                await db.close();
-                console.log('✅ Conexões de banco fechadas');
-                
-                // Salvar logs finais
-                const logger = require('./utils/logger');
-                logger.info('Servidor encerrado', { signal, timestamp: new Date().toISOString() });
-                
-            } catch (error) {
-                console.error('Erro durante shutdown:', error);
-            } finally {
-                process.exit(0);
-            }
-        });
-    });
-}
+// ==============================================
+// SERVE FRONTEND ESTÁTICO
+// ==============================================
+app.use(express.static('.'));
 
-// Iniciar servidor
+// Rota catch-all para SPA
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// ==============================================
+// INICIAR SERVIDOR
+// ==============================================
 async function startServer() {
-    try {
-        // Garantir diretórios
-        ensureDirectories();
-        
-        // Configurar handlers de shutdown
-        setupShutdownHandlers();
-        
-        // Iniciar servidor
-        app.listen(PORT, () => {
-            console.log(`
+  try {
+    // Inicializar banco
+    await initializeDatabase();
+    
+    // Iniciar servidor
+    app.listen(PORT, () => {
+      console.log(`
 ╔═══════════════════════════════════════════════════════╗
-║          BIZZ FLOW CRM v2.0 - SISTEMA COMPLETO       ║
+║          BIZZ FLOW CRM v2.0 - POSTGRESQL             ║
 ╠═══════════════════════════════════════════════════════╣
 ║ Status:        ✅ ONLINE                             ║
-║ Ambiente:      ${NODE_ENV.padEnd(20)}               ║
-║ Porta:         ${PORT.toString().padEnd(20)}               ║
+║ Ambiente:      ${process.env.NODE_ENV || 'development'}                    ║
+║ Porta:         ${PORT}                              ║
 ║ URL:           http://localhost:${PORT}             ║
-║ Banco:         SQLite (data/bizzflow.db)             ║
+║ Banco:         PostgreSQL (Render)                   ║
 ║                                                       ║
-║ 🔒 SEGURANÇA:                                        ║
-║   • Rate Limiting      ✅ Ativo                      ║
-║   • CORS               ✅ Configurado                ║
-║   • Helmet.js          ✅ Headers de segurança       ║
-║   • Gravatar           ✅ Bloqueado (usando local)   ║
-║                                                       ║
-║ 🚀 ENDPOINTS:                                        ║
-║   • /                 → Interface principal          ║
+║ 🔧 ENDPOINTS:                                        ║
 ║   • /health           → Health check                 ║
-║   • /status           → Status do sistema            ║
-║   • /api/*            → API RESTful                  ║
-║   • /admin/api/*      → API administrativa           ║
-║   • /api/avatar/*     → Avatares locais              ║
-║                                                       ║
-║ 📊 MONITORAMENTO:                                    ║
-║   • Logs:            logs/*.log                      ║
-║   • Backups:         backups/*.db                    ║
-║   • Database:        data/bizzflow.db                ║
+║   • /api/auth/login   → Login (admin/admin123)      ║
+║   • /api/clients      → Gerenciar clientes          ║
+║   • /api/products     → Gerenciar produtos          ║
+║   • /api/sales        → Realizar vendas             ║
+║   • /api/dashboard    → Métricas                    ║
 ╚═══════════════════════════════════════════════════════╝
-            `);
-            
-            // Informações do sistema
-            console.log(`📁 Diretório raiz: ${__dirname}`);
-            console.log(`📊 Memória inicial: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`);
-            console.log(`🔄 PID do processo: ${process.pid}`);
-            
-            // Mensagens por ambiente
-            if (NODE_ENV === 'production') {
-                console.log('🔒 AMBIENTE DE PRODUÇÃO');
-                console.log('   • Segurança máxima ativada');
-                console.log('   • Cache otimizado');
-                console.log('   • Logs apenas de erro');
-            } else {
-                console.log('🔧 AMBIENTE DE DESENVOLVIMENTO');
-                console.log('   • Debug ativado');
-                console.log('   • Logs detalhados');
-                console.log('   • Stack traces visíveis');
-            }
-            
-            console.log('\n✨ Servidor pronto! Aguardando requisições...');
-            console.log('👉 Pressione Ctrl+C para encerrar\n');
-            
-            // Verificação inicial do banco
-            setTimeout(async () => {
-                try {
-                    const stats = await db.getStats();
-                    console.log(`📊 Banco de dados: ${stats.totalClients || 0} clientes, ${stats.totalProducts || 0} produtos`);
-                } catch (error) {
-                    console.warn('⚠️  Aviso: Não foi possível conectar ao banco na inicialização');
-                }
-            }, 1000);
-        });
-        
-    } catch (error) {
-        console.error('❌ ERRO CRÍTICO ao iniciar servidor:', error);
-        process.exit(1);
-    }
+      `);
+    });
+    
+  } catch (error) {
+    console.error('❌ Falha ao iniciar servidor:', error);
+    process.exit(1);
+  }
 }
 
-// Iniciar a aplicação
+// Iniciar
 startServer();
-
-// Exportar app para testes
-module.exports = app;
