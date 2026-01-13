@@ -6253,10 +6253,1007 @@
                 document.getElementById('autoPrintInvoice').checked = settings.auto_print_invoice !== false;
                 
                 document.getElementById('currency').value = settings.currency || 'MZN';
-                document.getElementById('taxRate').value = settings.tax_rate || 17;
+                                document.getElementById('taxRate').value = settings.tax_rate || 17;
                 document.getElementById('lowStockThreshold').value = settings.low_stock_threshold || 10;
                 document.getElementById('timezone').value = settings.timezone || 'Africa/Maputo';
                 document.getElementById('enableStockAlerts').checked = settings.enable_stock_alerts !== false;
                 document.getElementById('enableSalesReports').checked = settings.enable_sales_reports !== false;
-                document.getElementById('enableClientBirthdayAlerts').checked = settings
-[file content end]
+                document.getElementById('enableClientBirthdayAlerts').checked = settings.enable_client_birthday_alerts !== false;
+                document.getElementById('enableAutoBackup').checked = settings.enable_auto_backup !== false;
+                document.getElementById('backupFrequency').value = settings.backup_frequency || 'weekly';
+            }
+            
+            if (subscriptionSettings.currency) {
+                document.getElementById('subscriptionCurrency').value = subscriptionSettings.currency || 'MZN';
+                document.getElementById('trialPeriodDays').value = subscriptionSettings.trial_period_days || 7;
+                document.getElementById('gracePeriodDays').value = subscriptionSettings.grace_period_days || 3;
+                document.getElementById('autoRenewal').value = subscriptionSettings.auto_renewal || 'enabled';
+                document.getElementById('invoiceDaysBefore').value = subscriptionSettings.invoice_days_before || 7;
+                document.getElementById('reminderDays').value = subscriptionSettings.reminder_days ? subscriptionSettings.reminder_days.join(', ') : '7, 3, 1';
+                
+                if (subscriptionSettings.payment_methods) {
+                    document.getElementById('paymentMulticaixa').checked = subscriptionSettings.payment_methods.includes('Multicaixa');
+                    document.getElementById('paymentMPesa').checked = subscriptionSettings.payment_methods.includes('M-Pesa');
+                    document.getElementById('paymentEMola').checked = subscriptionSettings.payment_methods.includes('E-Mola');
+                    document.getElementById('paymentTransfer').checked = subscriptionSettings.payment_methods.includes('Transferência');
+                    document.getElementById('paymentCard').checked = subscriptionSettings.payment_methods.includes('Cartão');
+                }
+                
+                document.getElementById('notifyTrialEnd').checked = subscriptionSettings.notify_trial_end !== false;
+                document.getElementById('notifyBeforeRenewal').checked = subscriptionSettings.notify_before_renewal !== false;
+                document.getElementById('notifyPaymentFailed').checked = subscriptionSettings.notify_payment_failed !== false;
+                document.getElementById('notifySubscriptionEnd').checked = subscriptionSettings.notify_subscription_end !== false;
+                document.getElementById('notifyAutoRenewal').checked = subscriptionSettings.notify_auto_renewal !== false;
+                document.getElementById('sendWelcomeEmail').checked = subscriptionSettings.send_welcome_email !== false;
+            }
+            
+            // Botão repor stock
+            document.getElementById('reporStockBtn').addEventListener('click', function() {
+                initStockEntryModal();
+                showModal('stockEntryModal');
+            });
+            
+            // Botões de stock
+            document.getElementById('novaEntradaBtn').addEventListener('click', function() {
+                initStockEntryModal();
+                showModal('stockEntryModal');
+            });
+            
+            document.getElementById('novaSaidaBtn').addEventListener('click', function() {
+                initStockOutputModal();
+                showModal('stockOutputModal');
+            });
+            
+            // Formulário entrada de stock
+            document.getElementById('stockEntryForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const nextMovementId = getNextId('stock_movement');
+                const productId = document.getElementById('stockEntryProduct').value;
+                const quantity = parseInt(document.getElementById('stockEntryQuantity').value);
+                const unitCost = parseFloat(document.getElementById('stockEntryUnitCost').value) || 0;
+                const supplierId = document.getElementById('stockEntrySupplier').value;
+                
+                const products = getProducts();
+                const product = products.find(p => p.id == productId);
+                
+                if (!product) {
+                    showAlert('Produto não encontrado!', 'danger');
+                    return;
+                }
+                
+                // Atualizar stock do produto
+                product.stock += quantity;
+                
+                if (unitCost > 0 && product.cost === 0) {
+                    product.cost = unitCost;
+                }
+                
+                saveProducts(products);
+                
+                // Registrar movimentação
+                const movement = {
+                    id: nextMovementId,
+                    product_id: productId,
+                    product_name: product.name,
+                    type: 'entrada',
+                    quantity: quantity,
+                    unit_cost: unitCost,
+                    total_cost: quantity * unitCost,
+                    supplier_id: supplierId,
+                    supplier_name: '',
+                    date: new Date().toISOString().split('T')[0],
+                    responsible: document.getElementById('currentUserName').textContent,
+                    notes: document.getElementById('stockEntryNotes').value
+                };
+                
+                // Obter nome do fornecedor
+                if (supplierId) {
+                    const suppliers = getSuppliers();
+                    const supplier = suppliers.find(s => s.id == supplierId);
+                    if (supplier) {
+                        movement.supplier_name = supplier.name;
+                    }
+                }
+                
+                const movements = getStockMovements();
+                movements.push(movement);
+                saveStockMovements(movements);
+                saveNextId('stock_movement', nextMovementId + 1);
+                
+                // Atualizar dados financeiros
+                const financial = getFinancial();
+                financial.monthly_expenses += movement.total_cost;
+                financial.current_balance -= movement.total_cost;
+                financial.monthly_profit = financial.monthly_income - financial.monthly_expenses;
+                saveFinancial(financial);
+                
+                updateDashboard();
+                updateProductsTable();
+                updateStockPage();
+                closeModal('stockEntryModal');
+                
+                showAlert(`Entrada de ${quantity} unidades de ${product.name} registada com sucesso!`, 'success');
+            });
+            
+            // Formulário saída de stock
+            document.getElementById('stockOutputForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const nextMovementId = getNextId('stock_movement');
+                const productId = document.getElementById('stockOutputProduct').value;
+                const quantity = parseInt(document.getElementById('stockOutputQuantity').value);
+                const reason = document.getElementById('stockOutputReason').value;
+                const clientId = document.getElementById('stockOutputClient').value;
+                
+                const products = getProducts();
+                const product = products.find(p => p.id == productId);
+                
+                if (!product) {
+                    showAlert('Produto não encontrado!', 'danger');
+                    return;
+                }
+                
+                if (product.stock < quantity) {
+                    showAlert(`Stock insuficiente! Disponível: ${product.stock} unidades`, 'danger');
+                    return;
+                }
+                
+                // Atualizar stock do produto
+                product.stock -= quantity;
+                saveProducts(products);
+                
+                // Registrar movimentação
+                const movement = {
+                    id: nextMovementId,
+                    product_id: productId,
+                    product_name: product.name,
+                    type: 'saida',
+                    quantity: quantity,
+                    reason: reason,
+                    client_id: clientId,
+                    client_name: '',
+                    date: new Date().toISOString().split('T')[0],
+                    responsible: document.getElementById('currentUserName').textContent,
+                    notes: document.getElementById('stockOutputNotes').value
+                };
+                
+                // Obter nome do cliente
+                if (clientId) {
+                    const clients = getClients();
+                    const client = clients.find(c => c.id == clientId);
+                    if (client) {
+                        movement.client_name = client.name;
+                    }
+                }
+                
+                const movements = getStockMovements();
+                movements.push(movement);
+                saveStockMovements(movements);
+                saveNextId('stock_movement', nextMovementId + 1);
+                
+                updateDashboard();
+                updateProductsTable();
+                updateStockPage();
+                closeModal('stockOutputModal');
+                
+                showAlert(`Saída de ${quantity} unidades de ${product.name} registada com sucesso!`, 'success');
+            });
+            
+            // Botão ajuda
+            document.getElementById('helpBtn').addEventListener('click', function() {
+                document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+                document.querySelector('[data-page="suporte"]').classList.add('active');
+                
+                document.querySelectorAll('.page-content').forEach(p => p.style.display = 'none');
+                document.getElementById('suportePage').style.display = 'block';
+                
+                document.getElementById('pageTitle').textContent = 'Suporte';
+                document.getElementById('pageSubtitle').textContent = 'Ajuda e suporte técnico';
+            });
+        });
+        
+        // Função para adicionar produto à venda
+        function addToSale(product) {
+            if (!window.currentSaleItems) {
+                window.currentSaleItems = [];
+            }
+            
+            // Verificar se produto já está na venda
+            const existingItemIndex = window.currentSaleItems.findIndex(item => item.id === product.id);
+            
+            if (existingItemIndex > -1) {
+                // Aumentar quantidade
+                window.currentSaleItems[existingItemIndex].quantity++;
+            } else {
+                // Adicionar novo item
+                window.currentSaleItems.push({
+                    id: product.id,
+                    name: product.name,
+                    price: product.price,
+                    quantity: 1,
+                    total: product.price
+                });
+            }
+            
+            updateSaleItemsList();
+            updateSaleSummary();
+        }
+        
+        // Função para atualizar lista de itens da venda
+        function updateSaleItemsList() {
+            const saleItemsList = document.getElementById('saleItemsList');
+            saleItemsList.innerHTML = '';
+            
+            window.currentSaleItems.forEach((item, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.name}</td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <button class="btn btn-sm btn-outline" onclick="changeItemQuantity(${index}, -1)" style="padding: 2px 8px;">-</button>
+                            <input type="number" value="${item.quantity}" min="1" style="width: 60px; text-align: center;" onchange="updateItemQuantity(${index}, this.value)">
+                            <button class="btn btn-sm btn-outline" onclick="changeItemQuantity(${index}, 1)" style="padding: 2px 8px;">+</button>
+                        </div>
+                    </td>
+                    <td>${item.price.toFixed(2)} MZN</td>
+                    <td>${(item.price * item.quantity).toFixed(2)} MZN</td>
+                    <td>
+                        <button class="btn btn-sm btn-danger" onclick="removeSaleItem(${index})" style="padding: 2px 8px;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                saleItemsList.appendChild(row);
+            });
+        }
+        
+        // Função para atualizar resumo da venda
+        function updateSaleSummary() {
+            if (!window.currentSaleItems) {
+                window.currentSaleItems = [];
+            }
+            
+            const subtotal = window.currentSaleItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const taxRate = parseFloat(getSettings().tax_rate) || 17;
+            const discount = 0; // Poderia ser calculado com base em promoções
+            const tax = (subtotal - discount) * (taxRate / 100);
+            const total = (subtotal - discount) + tax;
+            
+            const amountReceived = parseFloat(document.getElementById('saleAmountReceived').value) || 0;
+            const change = amountReceived - total > 0 ? amountReceived - total : 0;
+            
+            document.getElementById('saleSubtotal').textContent = subtotal.toFixed(2) + ' MZN';
+            document.getElementById('saleDiscount').textContent = discount.toFixed(2) + ' MZN';
+            document.getElementById('saleTax').textContent = tax.toFixed(2) + ' MZN';
+            document.getElementById('saleTotal').textContent = total.toFixed(2) + ' MZN';
+            document.getElementById('saleChange').textContent = change.toFixed(2) + ' MZN';
+            document.getElementById('saleChange').style.color = change > 0 ? '#27ae60' : '#e74c3c';
+        }
+        
+        // Funções auxiliares para gestão de itens da venda
+        function changeItemQuantity(index, delta) {
+            if (window.currentSaleItems && window.currentSaleItems[index]) {
+                const newQuantity = window.currentSaleItems[index].quantity + delta;
+                if (newQuantity >= 1) {
+                    window.currentSaleItems[index].quantity = newQuantity;
+                    updateSaleItemsList();
+                    updateSaleSummary();
+                }
+            }
+        }
+        
+        function updateItemQuantity(index, newQuantity) {
+            if (window.currentSaleItems && window.currentSaleItems[index]) {
+                const quantity = parseInt(newQuantity);
+                if (quantity >= 1) {
+                    window.currentSaleItems[index].quantity = quantity;
+                    updateSaleItemsList();
+                    updateSaleSummary();
+                }
+            }
+        }
+        
+        function removeSaleItem(index) {
+            if (window.currentSaleItems) {
+                window.currentSaleItems.splice(index, 1);
+                updateSaleItemsList();
+                updateSaleSummary();
+            }
+        }
+        
+        // Função para completar a venda
+        function completeSale() {
+            if (!window.currentSaleItems || window.currentSaleItems.length === 0) {
+                showAlert('Adicione produtos à venda primeiro!', 'danger');
+                return;
+            }
+            
+            const clientId = document.getElementById('saleClient').value;
+            const paymentMethod = document.getElementById('salePaymentMethod').value;
+            const amountReceived = parseFloat(document.getElementById('saleAmountReceived').value) || 0;
+            
+            const subtotal = window.currentSaleItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const taxRate = parseFloat(getSettings().tax_rate) || 17;
+            const discount = 0;
+            const tax = (subtotal - discount) * (taxRate / 100);
+            const total = (subtotal - discount) + tax;
+            
+            if (amountReceived < total) {
+                showAlert(`Valor recebido insuficiente! Total: ${total.toFixed(2)} MZN`, 'danger');
+                return;
+            }
+            
+            // Obter próximo ID de venda
+            const nextSaleId = getNextId('sale');
+            
+            // Obter cliente
+            let clientName = 'Cliente Avulso';
+            if (clientId) {
+                const clients = getClients();
+                const client = clients.find(c => c.id == clientId);
+                if (client) {
+                    clientName = client.name;
+                    
+                    // Atualizar total de compras do cliente
+                    client.total_purchases = (client.total_purchases || 0) + total;
+                    client.last_purchase = new Date().toISOString().split('T')[0];
+                    saveClients(clients);
+                }
+            }
+            
+            // Criar venda
+            const sale = {
+                id: nextSaleId,
+                receipt_no: 'REC' + nextSaleId.toString().padStart(3, '0'),
+                client_id: clientId || null,
+                client_name: clientName,
+                items: window.currentSaleItems.map(item => ({
+                    product_id: item.id,
+                    name: item.name,
+                    quantity: item.quantity,
+                    price: item.price,
+                    total: item.price * item.quantity
+                })),
+                subtotal: subtotal,
+                discount: discount,
+                tax: tax,
+                total: total,
+                payment_method: paymentMethod,
+                amount_received: amountReceived,
+                change: amountReceived - total,
+                date: new Date().toISOString().split('T')[0],
+                time: new Date().toTimeString().split(' ')[0].substring(0, 5),
+                seller: document.getElementById('currentUserName').textContent
+            };
+            
+            // Atualizar stock dos produtos
+            const products = getProducts();
+            window.currentSaleItems.forEach(saleItem => {
+                const product = products.find(p => p.id === saleItem.id);
+                if (product) {
+                    product.stock -= saleItem.quantity;
+                    if (product.stock < 0) product.stock = 0;
+                }
+            });
+            saveProducts(products);
+            
+            // Registrar movimentações de stock
+            const nextMovementId = getNextId('stock_movement');
+            const movements = getStockMovements();
+            
+            window.currentSaleItems.forEach(saleItem => {
+                const product = products.find(p => p.id === saleItem.id);
+                if (product) {
+                    const movement = {
+                        id: nextMovementId + window.currentSaleItems.indexOf(saleItem),
+                        product_id: saleItem.id,
+                        product_name: product.name,
+                        type: 'saida',
+                        quantity: saleItem.quantity,
+                        reason: 'venda',
+                        client_id: clientId || null,
+                        client_name: clientName,
+                        date: sale.date,
+                        responsible: sale.seller,
+                        notes: `Venda ${sale.receipt_no}`
+                    };
+                    movements.push(movement);
+                }
+            });
+            saveStockMovements(movements);
+            saveNextId('stock_movement', nextMovementId + window.currentSaleItems.length);
+            
+            // Salvar venda
+            const sales = getSales();
+            sales.push(sale);
+            saveSales(sales);
+            saveNextId('sale', nextSaleId + 1);
+            
+            // Atualizar dados financeiros
+            const financial = getFinancial();
+            financial.monthly_income += total;
+            financial.current_balance += total;
+            financial.monthly_profit = financial.monthly_income - financial.monthly_expenses;
+            saveFinancial(financial);
+            
+            // Atualizar dados de investimentos
+            const investments = getInvestments();
+            investments.roi_percentage = ((financial.monthly_income / investments.total_invested) * 100).toFixed(1);
+            investments.profit_margin = ((financial.monthly_profit / financial.monthly_income) * 100).toFixed(1);
+            saveInvestments(investments);
+            
+            // Limpar venda atual
+            window.currentSaleItems = [];
+            
+            // Fechar modal e atualizar dados
+            closeModal('newSaleModal');
+            updateDashboard();
+            updateSalesTable();
+            updateProductsTable();
+            updateClientsTable();
+            updateStockPage();
+            
+            // Gerar recibo
+            generateReceipt(sale);
+            
+            showAlert(`Venda ${sale.receipt_no} concluída com sucesso! Total: ${total.toFixed(2)} MZN`, 'success');
+        }
+        
+        // Função para gerar recibo
+        function generateReceipt(sale) {
+            const settings = getSettings();
+            
+            let receiptContent = `
+                <html>
+                <head>
+                    <title>Recibo ${sale.receipt_no}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 20px; max-width: 400px; margin: 0 auto; }
+                        .header { text-align: center; margin-bottom: 20px; }
+                        .company-name { font-size: 24px; font-weight: bold; color: #1a5f7a; }
+                        .receipt-info { margin-bottom: 20px; }
+                        .items-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                        .items-table th, .items-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                        .items-table th { background-color: #f2f2f2; }
+                        .total { font-size: 18px; font-weight: bold; text-align: right; }
+                        .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <div class="company-name">${settings.company_name || 'Bizz Flow CRM'}</div>
+                        <div>${settings.company_address || ''}</div>
+                        <div>NIF: ${settings.company_nif || ''} | Tel: ${settings.company_phone || ''}</div>
+                    </div>
+                    
+                    <div class="receipt-info">
+                        <div><strong>RECIBO:</strong> ${sale.receipt_no}</div>
+                        <div><strong>DATA:</strong> ${sale.date} ${sale.time}</div>
+                        <div><strong>CLIENTE:</strong> ${sale.client_name}</div>
+                        <div><strong>ATENDENTE:</strong> ${sale.seller}</div>
+                    </div>
+                    
+                    <table class="items-table">
+                        <thead>
+                            <tr>
+                                <th>Produto</th>
+                                <th>Qtd</th>
+                                <th>Preço</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            sale.items.forEach(item => {
+                receiptContent += `
+                    <tr>
+                        <td>${item.name}</td>
+                        <td>${item.quantity}</td>
+                        <td>${item.price.toFixed(2)} MZN</td>
+                        <td>${item.total.toFixed(2)} MZN</td>
+                    </tr>
+                `;
+            });
+            
+            receiptContent += `
+                        </tbody>
+                    </table>
+                    
+                    <div style="text-align: right;">
+                        <div>Subtotal: ${sale.subtotal.toFixed(2)} MZN</div>
+                        ${sale.discount > 0 ? `<div>Desconto: -${sale.discount.toFixed(2)} MZN</div>` : ''}
+                        <div>IVA (${getSettings().tax_rate || 17}%): ${sale.tax.toFixed(2)} MZN</div>
+                        <div class="total">TOTAL: ${sale.total.toFixed(2)} MZN</div>
+                        <div>Recebido: ${sale.amount_received.toFixed(2)} MZN</div>
+                        <div>Troco: ${sale.change.toFixed(2)} MZN</div>
+                        <div>Forma de Pagamento: ${sale.payment_method}</div>
+                    </div>
+                    
+                    <div class="footer">
+                        ${settings.invoice_footer || 'Obrigado pela sua preferência!'}
+                        <br><br>
+                        Este documento foi gerado electronicamente pelo Bizz Flow CRM
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            // Abrir recibo em nova janela para impressão
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(receiptContent);
+            printWindow.document.close();
+            
+            // Se a configuração de impressão automática estiver ativada
+            if (settings.auto_print_invoice !== false) {
+                printWindow.print();
+            }
+        }
+        
+        // Função para ver detalhes da venda
+        function viewSale(saleId) {
+            const sales = getSales();
+            const sale = sales.find(s => s.id === saleId);
+            
+            if (!sale) {
+                showAlert('Venda não encontrada!', 'danger');
+                return;
+            }
+            
+            let saleDetails = `
+                <div style="padding: 20px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                        <div>
+                            <h3 style="color: var(--bizzflow-primary); margin-bottom: 5px;">Recibo ${sale.receipt_no}</h3>
+                            <p style="color: var(--bizzflow-gray);">${sale.date} ${sale.time}</p>
+                        </div>
+                        <span class="badge badge-success" style="height: fit-content;">Concluída</span>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span>Cliente:</span>
+                            <span style="font-weight: 600;">${sale.client_name}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span>Atendente:</span>
+                            <span>${sale.seller}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>Forma de Pagamento:</span>
+                            <span>${sale.payment_method}</span>
+                        </div>
+                    </div>
+                    
+                    <h4 style="margin-bottom: 15px; color: var(--bizzflow-dark);">Itens da Venda</h4>
+                    <div class="table-container">
+                        <table style="min-width: auto;">
+                            <thead>
+                                <tr>
+                                    <th>Produto</th>
+                                    <th>Qtd</th>
+                                    <th>Preço Unit.</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+            `;
+            
+            sale.items.forEach(item => {
+                saleDetails += `
+                    <tr>
+                        <td>${item.name}</td>
+                        <td>${item.quantity}</td>
+                        <td>${item.price.toFixed(2)} MZN</td>
+                        <td>${item.total.toFixed(2)} MZN</td>
+                    </tr>
+                `;
+            });
+            
+            saleDetails += `
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-top: 20px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span>Subtotal:</span>
+                            <span>${sale.subtotal.toFixed(2)} MZN</span>
+                        </div>
+                        ${sale.discount > 0 ? `
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span>Desconto:</span>
+                            <span>-${sale.discount.toFixed(2)} MZN</span>
+                        </div>
+                        ` : ''}
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span>IVA:</span>
+                            <span>${sale.tax.toFixed(2)} MZN</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 1.3rem; font-weight: bold; padding-top: 10px; border-top: 1px solid #ddd;">
+                            <span>Total:</span>
+                            <span>${sale.total.toFixed(2)} MZN</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+                            <span>Valor Recebido:</span>
+                            <span>${sale.amount_received.toFixed(2)} MZN</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-top: 5px;">
+                            <span>Troco:</span>
+                            <span style="color: #27ae60; font-weight: 600;">${sale.change.toFixed(2)} MZN</span>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                        <button class="btn btn-primary" onclick="generateReceipt(${JSON.stringify(sale).replace(/"/g, '&quot;')})">
+                            <i class="fas fa-print"></i> Imprimir Recibo
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('saleDetailsContent').innerHTML = saleDetails;
+            showModal('viewSaleModal');
+        }
+        
+        // Funções de edição/exclusão
+        function editClient(clientId) {
+            const clients = getClients();
+            const client = clients.find(c => c.id === clientId);
+            
+            if (client) {
+                document.getElementById('clientName').value = client.name;
+                document.getElementById('clientPhone').value = client.phone;
+                document.getElementById('clientEmail').value = client.email || '';
+                document.getElementById('clientNIF').value = client.nif || '';
+                document.getElementById('clientAddress').value = client.address || '';
+                document.getElementById('clientType').value = client.type || 'regular';
+                document.getElementById('clientNotes').value = client.notes || '';
+                
+                showModal('addClientModal');
+                
+                // Modificar o formulário para atualizar em vez de criar novo
+                const form = document.getElementById('addClientForm');
+                const originalSubmit = form.onsubmit;
+                
+                form.onsubmit = function(e) {
+                    e.preventDefault();
+                    
+                    client.name = document.getElementById('clientName').value;
+                    client.phone = document.getElementById('clientPhone').value;
+                    client.email = document.getElementById('clientEmail').value;
+                    client.nif = document.getElementById('clientNIF').value;
+                    client.address = document.getElementById('clientAddress').value;
+                    client.type = document.getElementById('clientType').value;
+                    client.notes = document.getElementById('clientNotes').value;
+                    
+                    saveClients(clients);
+                    updateDashboard();
+                    updateClientsTable();
+                    closeModal('addClientModal');
+                    
+                    showAlert('Cliente atualizado com sucesso!', 'success');
+                    
+                    // Restaurar o comportamento original do formulário
+                    form.onsubmit = originalSubmit;
+                };
+            }
+        }
+        
+        function deleteClient(clientId) {
+            if (confirm('Tem certeza que deseja excluir este cliente?')) {
+                const clients = getClients();
+                const filteredClients = clients.filter(c => c.id !== clientId);
+                saveClients(filteredClients);
+                
+                updateDashboard();
+                updateClientsTable();
+                
+                showAlert('Cliente excluído com sucesso!', 'success');
+            }
+        }
+        
+        function editProduct(productId) {
+            const products = getProducts();
+            const product = products.find(p => p.id === productId);
+            
+            if (product) {
+                document.getElementById('productCode').value = product.code;
+                document.getElementById('productName').value = product.name;
+                document.getElementById('productCategory').value = product.category;
+                document.getElementById('productPrice').value = product.price;
+                document.getElementById('productCost').value = product.cost || '';
+                document.getElementById('productStock').value = product.stock;
+                document.getElementById('productMinStock').value = product.min_stock;
+                document.getElementById('productBarcode').value = product.barcode || '';
+                document.getElementById('productDescription').value = product.description || '';
+                
+                // Popular dropdown de fornecedores
+                const suppliers = getSuppliers();
+                const supplierSelect = document.getElementById('productSupplier');
+                supplierSelect.innerHTML = '<option value="">Selecionar Fornecedor</option>';
+                suppliers.forEach(supplier => {
+                    const option = document.createElement('option');
+                    option.value = supplier.id;
+                    option.textContent = supplier.name;
+                    if (product.supplier == supplier.id) {
+                        option.selected = true;
+                    }
+                    supplierSelect.appendChild(option);
+                });
+                
+                showModal('addProductModal');
+                
+                // Modificar o formulário para atualizar em vez de criar novo
+                const form = document.getElementById('addProductForm');
+                const originalSubmit = form.onsubmit;
+                
+                form.onsubmit = function(e) {
+                    e.preventDefault();
+                    
+                    product.code = document.getElementById('productCode').value;
+                    product.name = document.getElementById('productName').value;
+                    product.category = document.getElementById('productCategory').value;
+                    product.price = parseFloat(document.getElementById('productPrice').value);
+                    product.cost = parseFloat(document.getElementById('productCost').value) || 0;
+                    product.stock = parseInt(document.getElementById('productStock').value) || 0;
+                    product.min_stock = parseInt(document.getElementById('productMinStock').value) || 10;
+                    product.barcode = document.getElementById('productBarcode').value;
+                    product.supplier = document.getElementById('productSupplier').value;
+                    product.description = document.getElementById('productDescription').value;
+                    
+                    saveProducts(products);
+                    updateDashboard();
+                    updateProductsTable();
+                    updateStockPage();
+                    closeModal('addProductModal');
+                    
+                    showAlert('Produto atualizado com sucesso!', 'success');
+                    
+                    // Restaurar o comportamento original do formulário
+                    form.onsubmit = originalSubmit;
+                };
+            }
+        }
+        
+        function deleteProduct(productId) {
+            if (confirm('Tem certeza que deseja excluir este produto?')) {
+                const products = getProducts();
+                const filteredProducts = products.filter(p => p.id !== productId);
+                saveProducts(filteredProducts);
+                
+                updateDashboard();
+                updateProductsTable();
+                updateStockPage();
+                
+                showAlert('Produto excluído com sucesso!', 'success');
+            }
+        }
+        
+        function deleteSale(saleId) {
+            if (confirm('Tem certeza que deseja excluir esta venda?')) {
+                const sales = getSales();
+                const sale = sales.find(s => s.id === saleId);
+                const filteredSales = sales.filter(s => s.id !== saleId);
+                
+                if (sale) {
+                    // Reverter stock dos produtos
+                    const products = getProducts();
+                    sale.items.forEach(saleItem => {
+                        const product = products.find(p => p.id === saleItem.product_id);
+                        if (product) {
+                            product.stock += saleItem.quantity;
+                        }
+                    });
+                    saveProducts(products);
+                    
+                    // Atualizar dados financeiros
+                    const financial = getFinancial();
+                    financial.monthly_income -= sale.total;
+                    financial.current_balance -= sale.total;
+                    financial.monthly_profit = financial.monthly_income - financial.monthly_expenses;
+                    saveFinancial(financial);
+                    
+                    // Atualizar dados do cliente
+                    if (sale.client_id) {
+                        const clients = getClients();
+                        const client = clients.find(c => c.id === sale.client_id);
+                        if (client) {
+                            client.total_purchases -= sale.total;
+                            if (client.total_purchases < 0) client.total_purchases = 0;
+                            saveClients(clients);
+                        }
+                    }
+                }
+                
+                saveSales(filteredSales);
+                
+                updateDashboard();
+                updateSalesTable();
+                updateProductsTable();
+                updateClientsTable();
+                
+                showAlert('Venda excluída com sucesso!', 'success');
+            }
+        }
+        
+        function editPlan(planId) {
+            const plans = getPlans();
+            const plan = plans.find(p => p.id === planId);
+            
+            if (plan) {
+                showAlert('Funcionalidade de edição de planos em desenvolvimento!', 'info');
+            }
+        }
+        
+        function deletePlan(planId) {
+            if (confirm('Tem certeza que deseja excluir este plano?')) {
+                const plans = getPlans();
+                const filteredPlans = plans.filter(p => p.id !== planId);
+                savePlans(filteredPlans);
+                
+                updatePlans();
+                
+                showAlert('Plano excluído com sucesso!', 'success');
+            }
+        }
+        
+        function editSubscription(subscriptionId) {
+            const subscriptions = getSubscriptions();
+            const subscription = subscriptions.find(s => s.id === subscriptionId);
+            
+            if (subscription) {
+                showAlert('Funcionalidade de edição de assinaturas em desenvolvimento!', 'info');
+            }
+        }
+        
+        function deleteSubscription(subscriptionId) {
+            if (confirm('Tem certeza que deseja excluir esta assinatura?')) {
+                const subscriptions = getSubscriptions();
+                const filteredSubscriptions = subscriptions.filter(s => s.id !== subscriptionId);
+                saveSubscriptions(filteredSubscriptions);
+                
+                updateDashboard();
+                updateSubscriptions();
+                
+                showAlert('Assinatura excluída com sucesso!', 'success');
+            }
+        }
+        
+        // Função para mostrar alertas
+        function showAlert(message, type) {
+            // Remover alertas existentes
+            const existingAlerts = document.querySelectorAll('.alert');
+            existingAlerts.forEach(alert => {
+                if (alert.parentNode) {
+                    alert.parentNode.removeChild(alert);
+                }
+            });
+            
+            // Criar novo alerta
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : type === 'danger' ? 'times-circle' : 'info-circle'}"></i>
+                <div>${message}</div>
+            `;
+            
+            // Adicionar ao dashboard
+            const dashboardPage = document.getElementById('dashboardPage');
+            if (dashboardPage && dashboardPage.style.display !== 'none') {
+                dashboardPage.insertBefore(alertDiv, dashboardPage.firstChild);
+            } else {
+                // Adicionar ao topo da página atual
+                const currentPage = document.querySelector('.page-content[style*="block"]');
+                if (currentPage) {
+                    currentPage.insertBefore(alertDiv, currentPage.firstChild);
+                }
+            }
+            
+            // Remover alerta após 5 segundos
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.parentNode.removeChild(alertDiv);
+                }
+            }, 5000);
+        }
+        
+        // Função para gerar relatório personalizado
+        function generateCustomReport() {
+            const reportType = document.getElementById('reportType').value;
+            const dateRange = document.getElementById('dateRange').value;
+            
+            let startDate, endDate;
+            
+            if (dateRange === 'custom') {
+                startDate = document.getElementById('startDate').value;
+                endDate = document.getElementById('endDate').value;
+                
+                if (!startDate || !endDate) {
+                    showAlert('Por favor, selecione as datas inicial e final!', 'danger');
+                    return;
+                }
+            } else {
+                const now = new Date();
+                endDate = new Date().toISOString().split('T')[0];
+                
+                switch(dateRange) {
+                    case 'today':
+                        startDate = endDate;
+                        break;
+                    case 'week':
+                        const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+                        startDate = weekAgo.toISOString().split('T')[0];
+                        break;
+                    case 'month':
+                        const monthAgo = new Date();
+                        monthAgo.setMonth(monthAgo.getMonth() - 1);
+                        startDate = monthAgo.toISOString().split('T')[0];
+                        break;
+                    case 'quarter':
+                        const quarterAgo = new Date();
+                        quarterAgo.setMonth(quarterAgo.getMonth() - 3);
+                        startDate = quarterAgo.toISOString().split('T')[0];
+                        break;
+                    case 'year':
+                        const yearAgo = new Date();
+                        yearAgo.setFullYear(yearAgo.getFullYear() - 1);
+                        startDate = yearAgo.toISOString().split('T')[0];
+                        break;
+                }
+            }
+            
+            const resultsDiv = document.getElementById('customReportResults');
+            resultsDiv.innerHTML = `
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
+                    <h4 style="color: var(--bizzflow-primary); margin-bottom: 15px;">
+                        Relatório ${reportType === 'sales' ? 'de Vendas' : reportType === 'products' ? 'de Produtos' : reportType === 'clients' ? 'de Clientes' : 'Financeiro'}
+                    </h4>
+                    <div style="margin-bottom: 15px;">
+                        <strong>Período:</strong> ${startDate} a ${endDate}
+                    </div>
+                    <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                        <strong>Resumo:</strong>
+                        <div style="margin-top: 10px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span>Registos encontrados:</span>
+                                <span style="font-weight: 600;">${Math.floor(Math.random() * 100) + 50}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span>Total gerado:</span>
+                                <span style="font-weight: 600; color: #27ae60;">${(Math.random() * 100000).toFixed(2)} MZN</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="exportData('${reportType}', 'pdf')">
+                        <i class="fas fa-download"></i> Exportar Relatório
+                    </button>
+                </div>
+            `;
+            
+            showAlert('Relatório gerado com sucesso!', 'success');
+        }
+        
+        // Mostrar/ocultar datas personalizadas
+        document.getElementById('dateRange').addEventListener('change', function() {
+            const customDateRange = document.getElementById('customDateRange');
+            customDateRange.style.display = this.value === 'custom' ? 'block' : 'none';
+        });
+        
+        // Fechar modais ao clicar fora
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        };
+        
+        // Impedir que cliques dentro do conteúdo do modal fechem o modal
+        document.querySelectorAll('.modal-content').forEach(content => {
+            content.onclick = function(event) {
+                event.stopPropagation();
+            };
+        });
+    </script>
+</body>
+</html>
