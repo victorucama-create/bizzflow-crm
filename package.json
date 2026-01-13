@@ -1,17 +1,17 @@
 {
   "name": "bizzflow-crm",
   "version": "2.0.0",
-  "description": "Sistema de Gestão Empresarial Inteligente - CRM para Moçambique",
+  "description": "Sistema de Gestão Empresarial Inteligente - CRM com banco de dados SQLite",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js",
+    "dev": "NODE_ENV=development nodemon server.js",
     "dev:win": "set NODE_ENV=development&& nodemon server.js",
-    "dev:mac": "NODE_ENV=development nodemon server.js",
     "prod": "NODE_ENV=production node server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "backup": "node scripts/backup.js",
     "logs": "tail -f logs/errors.log",
+    "init-db": "node -e \"console.log('Banco inicializado automaticamente na primeira execução');\"",
     "deploy": "git push && echo '✅ Código enviado para GitHub'"
   },
   "keywords": [
@@ -23,6 +23,7 @@
     "vendas",
     "clientes",
     "produtos",
+    "sqlite",
     "bizzflow"
   ],
   "author": "Victor Ucama - Bizz Flow Lda",
@@ -33,7 +34,8 @@
     "compression": "^1.7.4",
     "helmet": "^7.0.0",
     "morgan": "^1.10.0",
-    "express-rate-limit": "^6.10.0"
+    "express-rate-limit": "^6.10.0",
+    "sqlite3": "^5.1.6"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
