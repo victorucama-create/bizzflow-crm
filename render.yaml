@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: bizzflow-crm
+    env: node
+    region: ohio  # Mais próximo de Moçambique que Oregon
+    repo: https://github.com/victorucama/bizzflow-crm
+    plan: free
+    branch: main
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: APP_NAME
+        value: Bizz Flow CRM
+      - key: APP_VERSION
+        value: 2.0.0
+      - key: APP_AUTHOR
+        value: Victor Ucama
+
+# Cron Jobs (
