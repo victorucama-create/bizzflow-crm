@@ -26,7 +26,53 @@ const pool = new Pool({
 // ==============================================
 // MIDDLEWARE DE SEGURANÇA
 // ==============================================
-app.use(helmet());
+// Configuração do Helmet com CSP personalizado
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: [
+          "'self'",
+          "'unsafe-inline'",        // Permite scripts inline
+          "https://www.googletagmanager.com",
+          "https://browser.sentry-cdn.com",
+          "https://cdn.jsdelivr.net",
+          "https://code.jquery.com",
+          "https://cdnjs.cloudflare.com"
+        ],
+        styleSrc: [
+          "'self'",
+          "'unsafe-inline'",        // Permite CSS inline
+          "https://fonts.googleapis.com",
+          "https://cdnjs.cloudflare.com"
+        ],
+        fontSrc: [
+          "'self'",
+          "https://fonts.gstatic.com",
+          "https://cdnjs.cloudflare.com"
+        ],
+        imgSrc: [
+          "'self'",
+          "data:",                  // Permite data: URLs (para avatares)
+          "https:",
+          "http:"
+        ],
+        connectSrc: [
+          "'self'",
+          "https://bizzflow-crm.onrender.com",
+          "https://sentry.io",
+          "https://www.google-analytics.com"
+        ],
+        frameSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        upgradeInsecureRequests: []
+      }
+    },
+    crossOriginEmbedderPolicy: false,  // Para permitir scripts externos
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+  })
+);
 app.use(compression());
 
 // Rate limiting
