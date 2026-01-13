@@ -1,28 +1,45 @@
 # Bizz Flow CRM
 
-Sistema de Gestão Empresarial Inteligente - Edição Premium Moçambique
+**Sistema de Gestão Empresarial Inteligente - Edição Premium Moçambique**
+
+Desenvolvido por: **Victor Ucama**  
+Empresa: **Bizz Flow Lda**  
+Localização: **Maputo, Moçambique**
+
+## 🌐 Links
+
+- **Repositório**: https://github.com/victorucama/bizzflow-crm
+- **Demo Online**: https://bizzflow-crm.onrender.com
+- **Documentação**: [Em desenvolvimento]
 
 ## 📋 Sobre o Projeto
 
-Bizz Flow CRM é um sistema completo de gestão empresarial desenvolvido para o mercado moçambicano. O sistema inclui:
+Sistema completo de gestão empresarial desenvolvido especificamente para o mercado moçambicano, com suporte a:
+- Multi-moeda (MZN, USD, EUR)
+- Pagamentos locais (Multicaixa, M-Pesa, E-Mola)
+- IVA moçambicano (17%)
+- Documentação em Português de Moçambique
 
-- **Gestão de Clientes**: Cadastro, segmentação e histórico de compras
-- **Gestão de Produtos**: Controle de stock, categorias e fornecedores
-- **Gestão de Vendas**: Sistema completo de checkout e faturação
-- **Financeiro**: Fluxo de caixa, relatórios e análises
-- **Assinaturas**: Sistema de planos e gestão de subscrições
-- **Relatórios**: Dashboard interativo com gráficos e métricas
+## 🚀 Tecnologias
 
-## 🚀 Tecnologias Utilizadas
+- **Frontend**: HTML5, CSS3, Vanilla JavaScript, Chart.js
+- **Backend**: Node.js, Express.js
+- **Segurança**: Helmet.js, Rate Limiting, CORS
+- **Performance**: Compression, Cache inteligente
+- **Deploy**: Render.com (Free Tier)
 
-- HTML5, CSS3, JavaScript (Vanilla)
-- Chart.js para gráficos
-- Express.js para o servidor
-- LocalStorage para persistência de dados
+## 🛠️ Instalação Local
 
-## 🛠️ Instalação e Execução Local
-
-1. **Clone o repositório**
 ```bash
-git clone https://github.com/seu-usuario/bizzflow-crm.git
+# Clone o repositório
+git clone https://github.com/victorucama/bizzflow-crm.git
 cd bizzflow-crm
+
+# Instale dependências
+npm install
+
+# Inicie o servidor de desenvolvimento
+npm run dev
+
+# Acesse no navegador
+# http://localhost:3000
