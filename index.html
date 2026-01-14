@@ -4444,8 +4444,11 @@
             
             const salesChartCtx = document.getElementById('salesChart').getContext('2d');
             if (window.salesChart) {
-                window.salesChart.destroy();
-            }
+                if (window.salesChart && typeof window.salesChart.destroy === 'function') {
+    window.salesChart.destroy();
+} else {
+    console.warn('⚠️ salesChart não disponível para destroy');
+}
             
             window.salesChart = new Chart(salesChartCtx, {
                 type: 'line',
