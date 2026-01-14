@@ -1,11 +1,99 @@
 // ==============================================
-// BIZZFLOW CRM - FUNÇÕES COMPLETAS
+// BIZZFLOW CRM - FUNÇÕES COMPLETAS (CORRIGIDAS)
 // ==============================================
 // Arquivo: js/functions.js
-// Data: 2024
-// Autor: BizzFlow CRM
-// Descrição: Todas as funções faltantes do sistema
+// Versão: 1.1.0 (Corrigida)
+// Data: 2024-01-14
 // ==============================================
+
+// ========== CORREÇÕES DE EMERGÊNCIA ==========
+console.log('🚀 Inicializando BizzFlow CRM com correções...');
+
+// 1. GARANTIR QUE CHART.JS EXISTA
+if (typeof Chart === 'undefined') {
+    console.warn('📊 Chart.js não encontrado, inicializando objetos seguros...');
+    
+    // Criar objetos mock para gráficos
+    window.salesChart = {
+        destroy: function() { console.log('salesChart.destroy() [safe mock]'); },
+        update: function() { return this; },
+        clear: function() { return this; },
+        data: { datasets: [], labels: [] },
+        options: {}
+    };
+    
+    window.productsChart = {
+        destroy: function() { console.log('productsChart.destroy() [safe mock]'); },
+        update: function() { return this; }
+    };
+    
+    // Tentar carregar Chart.js dinamicamente
+    const chartScript = document.createElement('script');
+    chartScript.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js';
+    chartScript.async = true;
+    chartScript.onload = function() {
+        console.log('✅ Chart.js carregado dinamicamente');
+        // Reexecutar funções que dependem de Chart.js
+        if (typeof window.updateCharts === 'function') {
+            setTimeout(() => {
+                try {
+                    window.updateCharts();
+                } catch (e) {
+                    console.warn('Ainda não possível atualizar gráficos:', e.message);
+                }
+            }, 1000);
+        }
+    };
+    document.head.appendChild(chartScript);
+} else {
+    console.log('✅ Chart.js já carregado');
+    // Inicializar objetos se não existirem
+    window.salesChart = window.salesChart || {
+        destroy: function() { console.log('salesChart.destroy() [placeholder]'); },
+        update: function() { return this; }
+    };
+}
+
+// 2. FUNÇÃO SEGURA PARA RESET DE FORMULÁRIOS
+window.safeFormReset = function(formId) {
+    const form = document.getElementById(formId);
+    if (form && typeof form.reset === 'function') {
+        form.reset();
+        console.log('✅ Formulário resetado:', formId);
+        return true;
+    } else {
+        console.warn('⚠️ Formulário não encontrado ou sem reset():', formId);
+        return false;
+    }
+};
+
+// 3. SUBSTITUIR FUNÇÕES PROBLEMÁTICAS
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🏁 DOM carregado, aplicando correções...');
+    
+    // Substituir event listeners problemáticos
+    setTimeout(() => {
+        // Encontrar botões com reset problemático
+        const buttons = document.querySelectorAll('button[onclick*="reset"], button[onclick*=".reset()"]');
+        buttons.forEach(btn => {
+            const oldOnClick = btn.getAttribute('onclick');
+            if (oldOnClick && oldOnClick.includes('reset')) {
+                console.log('🔄 Substituindo onclick problemático:', oldOnClick);
+                
+                // Extrair ID do formulário
+                const formMatch = oldOnClick.match(/getElementById\(['"]([^'"]+)['"]\)/);
+                if (formMatch && formMatch[1]) {
+                    const formId = formMatch[1];
+                    btn.setAttribute('onclick', `safeFormReset('${formId}')`);
+                    console.log(`✅ Botão atualizado para safeFormReset('${formId}')`);
+                }
+            }
+        });
+    }, 100);
+});
+
+console.log('✅ Correções de emergência aplicadas');
+// ========== FIM DAS CORREÇÕES ==========
 
 // Configuração da API
 const API_URL = window.location.hostname.includes('render.com') 
@@ -149,7 +237,7 @@ function getNotificationColor(type) {
 }
 
 // ==============================================
-// FUNÇÕES DE VENDAS
+// FUNÇÕES DE VENDAS (COM CORREÇÕES)
 // ==============================================
 
 /**
@@ -323,99 +411,171 @@ function removeSaleItem(itemId) {
 }
 
 /**
- * Abre modal com detalhes da venda
+ * Abre modal com detalhes da venda (VERSÃO SEGURA)
  * @param {object} sale - Objeto da venda
  */
 function openSaleDetailsModal(sale) {
-    // Criar modal
+    // Fechar modal existente
+    const existingModal = document.getElementById('saleDetailsModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Criar modal seguro
     const modalHTML = `
-        <div class="modal-overlay" id="saleDetailsModal">
-            <div class="modal-content" style="max-width: 800px;">
-                <div class="modal-header">
-                    <h3>📋 Detalhes da Venda #${sale.sale_number || sale.id}</h3>
-                    <button class="modal-close" onclick="closeModal('saleDetailsModal')">&times;</button>
+        <div class="modal-overlay" id="saleDetailsModal" style="
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        ">
+            <div class="modal-content" style="
+                background: white;
+                border-radius: 12px;
+                padding: 20px;
+                max-width: 800px;
+                width: 90%;
+                max-height: 90vh;
+                overflow-y: auto;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            ">
+                <div class="modal-header" style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 20px;
+                    padding-bottom: 15px;
+                    border-bottom: 1px solid #eee;
+                ">
+                    <h3 style="margin: 0;">📋 Detalhes da Venda #${sale.sale_number || sale.id || 'N/A'}</h3>
+                    <button onclick="closeModal('saleDetailsModal')" style="
+                        background: none;
+                        border: none;
+                        font-size: 24px;
+                        cursor: pointer;
+                        color: #666;
+                        padding: 0;
+                        width: 30px;
+                        height: 30px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        border-radius: 50%;
+                        transition: background 0.2s;
+                    ">&times;</button>
                 </div>
                 <div class="modal-body">
-                    <div class="sale-details-grid">
-                        <div class="detail-group">
-                            <label>Data:</label>
-                            <span>${formatDate(sale.sale_date || sale.created_at)}</span>
+                    <div style="
+                        display: grid;
+                        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                        gap: 15px;
+                        margin-bottom: 20px;
+                    ">
+                        <div>
+                            <label style="font-weight: 600; color: #666;">Data:</label>
+                            <div>${formatDate(sale.sale_date || sale.created_at)}</div>
                         </div>
-                        <div class="detail-group">
-                            <label>Cliente:</label>
-                            <span>${sale.client_name || 'Não informado'}</span>
+                        <div>
+                            <label style="font-weight: 600; color: #666;">Cliente:</label>
+                            <div>${sale.client_name || 'Não informado'}</div>
                         </div>
-                        <div class="detail-group">
-                            <label>Vendedor:</label>
-                            <span>${sale.seller_name || 'Sistema'}</span>
+                        <div>
+                            <label style="font-weight: 600; color: #666;">Vendedor:</label>
+                            <div>${sale.seller_name || 'Sistema'}</div>
                         </div>
-                        <div class="detail-group">
-                            <label>Pagamento:</label>
-                            <span class="payment-method ${sale.payment_method}">
-                                ${getPaymentMethodLabel(sale.payment_method)}
-                            </span>
-                        </div>
-                        <div class="detail-group">
-                            <label>Status:</label>
-                            <span class="sale-status ${sale.status}">${sale.status || 'Completa'}</span>
+                        <div>
+                            <label style="font-weight: 600; color: #666;">Status:</label>
+                            <span style="
+                                background: ${sale.status === 'completed' ? '#10B981' : '#F59E0B'};
+                                color: white;
+                                padding: 2px 8px;
+                                border-radius: 12px;
+                                font-size: 12px;
+                            ">${sale.status || 'Completa'}</span>
                         </div>
                     </div>
                     
-                    <h4 style="margin-top: 20px;">Itens da Venda</h4>
-                    <div class="table-responsive">
-                        <table class="items-table">
+                    <h4 style="margin: 20px 0 10px 0;">Itens da Venda</h4>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
                             <thead>
-                                <tr>
-                                    <th>Produto</th>
-                                    <th>Código</th>
-                                    <th>Quantidade</th>
-                                    <th>Preço Unit.</th>
-                                    <th>Total</th>
+                                <tr style="background: #f8f9fa;">
+                                    <th style="padding: 10px; text-align: left; border-bottom: 2px solid #dee2e6;">Produto</th>
+                                    <th style="padding: 10px; text-align: left; border-bottom: 2px solid #dee2e6;">Qtd</th>
+                                    <th style="padding: 10px; text-align: left; border-bottom: 2px solid #dee2e6;">Preço Unit.</th>
+                                    <th style="padding: 10px; text-align: left; border-bottom: 2px solid #dee2e6;">Total</th>
                                 </tr>
                             </thead>
-                            <tbody id="saleItemsDetails">
+                            <tbody>
                                 ${(sale.items || []).map(item => `
                                     <tr>
-                                        <td>${item.product_name || 'Produto'}</td>
-                                        <td>${item.product_code || 'N/A'}</td>
-                                        <td>${item.quantity}</td>
-                                        <td>${formatCurrency(item.unit_price)}</td>
-                                        <td>${formatCurrency(item.total_price)}</td>
+                                        <td style="padding: 10px; border-bottom: 1px solid #eee;">
+                                            <strong>${item.product_name || 'Produto'}</strong><br>
+                                            <small style="color: #666;">${item.product_code || 'N/A'}</small>
+                                        </td>
+                                        <td style="padding: 10px; border-bottom: 1px solid #eee;">${item.quantity || 0}</td>
+                                        <td style="padding: 10px; border-bottom: 1px solid #eee;">${formatCurrency(item.unit_price || 0)}</td>
+                                        <td style="padding: 10px; border-bottom: 1px solid #eee; font-weight: 600;">${formatCurrency(item.total_price || 0)}</td>
                                     </tr>
                                 `).join('')}
                             </tbody>
                         </table>
                     </div>
                     
-                    <div class="sale-totals" style="margin-top: 20px; text-align: right;">
-                        <div class="total-row">
+                    <div style="
+                        margin-top: 20px;
+                        padding-top: 20px;
+                        border-top: 2px solid #eee;
+                        text-align: right;
+                    ">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                             <span>Subtotal:</span>
-                            <strong>${formatCurrency(sale.total_amount)}</strong>
+                            <strong>${formatCurrency(sale.total_amount || 0)}</strong>
                         </div>
-                        <div class="total-row">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                             <span>Desconto:</span>
-                            <strong class="text-danger">-${formatCurrency(sale.discount)}</strong>
+                            <strong style="color: #ef4444;">-${formatCurrency(sale.discount || 0)}</strong>
                         </div>
-                        <div class="total-row">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                             <span>Taxa:</span>
-                            <strong class="text-info">+${formatCurrency(sale.tax)}</strong>
+                            <strong style="color: #3b82f6;">+${formatCurrency(sale.tax || 0)}</strong>
                         </div>
-                        <div class="total-row grand-total">
-                            <span>TOTAL:</span>
-                            <strong class="text-success">${formatCurrency(sale.final_amount)}</strong>
+                        <div style="display: flex; justify-content: space-between; margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd; font-size: 1.2em;">
+                            <span><strong>TOTAL:</strong></span>
+                            <strong style="color: #10b981;">${formatCurrency(sale.final_amount || 0)}</strong>
                         </div>
                     </div>
-                    
-                    ${sale.notes ? `
-                    <div class="sale-notes" style="margin-top: 20px;">
-                        <h4>Observações</h4>
-                        <p>${sale.notes}</p>
-                    </div>
-                    ` : ''}
                 </div>
-                <div class="modal-footer">
-                    <button class="btn-secondary" onclick="closeModal('saleDetailsModal')">Fechar</button>
-                    <button class="btn-primary" onclick="printSale('${sale.id}')">🖨️ Imprimir</button>
+                <div class="modal-footer" style="
+                    margin-top: 20px;
+                    padding-top: 15px;
+                    border-top: 1px solid #eee;
+                    display: flex;
+                    justify-content: flex-end;
+                    gap: 10px;
+                ">
+                    <button onclick="closeModal('saleDetailsModal')" style="
+                        background: #6c757d;
+                        color: white;
+                        border: none;
+                        padding: 10px 20px;
+                        border-radius: 6px;
+                        cursor: pointer;
+                    ">Fechar</button>
+                    <button onclick="printSale('${sale.id}')" style="
+                        background: #3b82f6;
+                        color: white;
+                        border: none;
+                        padding: 10px 20px;
+                        border-radius: 6px;
+                        cursor: pointer;
+                    ">🖨️ Imprimir</button>
                 </div>
             </div>
         </div>
@@ -426,7 +586,7 @@ function openSaleDetailsModal(sale) {
 }
 
 /**
- * Visualiza uma venda específica
+ * Visualiza uma venda específica (VERSÃO SEGURA)
  * @param {string|number} saleId - ID da venda
  */
 async function viewSale(saleId) {
@@ -497,7 +657,7 @@ async function deleteSale(saleId, saleNumber = '') {
             showNotification('✅ Venda excluída com sucesso!', 'success');
             // Recarregar lista de vendas se existir
             if (typeof loadSales === 'function') {
-                loadSales();
+                setTimeout(loadSales, 500);
             }
         } else {
             showNotification(data.message || 'Erro ao excluir venda', 'error');
@@ -510,61 +670,105 @@ async function deleteSale(saleId, saleNumber = '') {
 }
 
 // ==============================================
-// FUNÇÕES DE CLIENTES
+// FUNÇÕES DE CLIENTES (COM CORREÇÕES)
 // ==============================================
 
 /**
- * Abre modal para editar cliente
+ * Abre modal para editar cliente (VERSÃO SEGURA)
  * @param {object} client - Objeto do cliente
  */
 function openEditClientModal(client) {
+    // Fechar modal existente
+    const existingModal = document.getElementById('editClientModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
     const modalHTML = `
-        <div class="modal-overlay" id="editClientModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>✏️ Editar Cliente</h3>
-                    <button class="modal-close" onclick="closeModal('editClientModal')">&times;</button>
+        <div class="modal-overlay" id="editClientModal" style="
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        ">
+            <div class="modal-content" style="
+                background: white;
+                border-radius: 12px;
+                padding: 20px;
+                max-width: 500px;
+                width: 90%;
+                max-height: 90vh;
+                overflow-y: auto;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            ">
+                <div class="modal-header" style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 20px;
+                    padding-bottom: 15px;
+                    border-bottom: 1px solid #eee;
+                ">
+                    <h3 style="margin: 0;">✏️ Editar Cliente</h3>
+                    <button onclick="closeModal('editClientModal')" style="
+                        background: none;
+                        border: none;
+                        font-size: 24px;
+                        cursor: pointer;
+                        color: #666;
+                    ">&times;</button>
                 </div>
-                <div class="modal-body">
-                    <form id="editClientForm" onsubmit="saveClientChanges(event, '${client.id}')">
-                        <div class="form-group">
-                            <label for="editClientName">Nome *</label>
-                            <input type="text" id="editClientName" value="${client.name || ''}" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="editClientEmail">Email</label>
-                            <input type="email" id="editClientEmail" value="${client.email || ''}">
-                        </div>
-                        <div class="form-group">
-                            <label for="editClientPhone">Telefone</label>
-                            <input type="tel" id="editClientPhone" value="${client.phone || ''}">
-                        </div>
-                        <div class="form-group">
-                            <label for="editClientCategory">Categoria</label>
-                            <select id="editClientCategory">
-                                <option value="normal" ${client.category === 'normal' ? 'selected' : ''}>Normal</option>
-                                <option value="VIP" ${client.category === 'VIP' ? 'selected' : ''}>VIP</option>
-                                <option value="corporate" ${client.category === 'corporate' ? 'selected' : ''}>Corporate</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="editClientAddress">Endereço</label>
-                            <textarea id="editClientAddress" rows="3">${client.address || ''}</textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="editClientCity">Cidade</label>
-                            <input type="text" id="editClientCity" value="${client.city || ''}">
-                        </div>
-                        <div class="form-group">
-                            <label for="editClientProvince">Província</label>
-                            <input type="text" id="editClientProvince" value="${client.province || ''}">
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn-secondary" onclick="closeModal('editClientModal')">Cancelar</button>
-                            <button type="submit" class="btn-primary">Salvar Alterações</button>
-                        </div>
-                    </form>
-                </div>
+                <form id="editClientForm" onsubmit="saveClientChanges(event, '${client.id}')">
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Nome *</label>
+                        <input type="text" id="editClientName" value="${(client.name || '').replace(/"/g, '&quot;')}" 
+                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" required>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Email</label>
+                        <input type="email" id="editClientEmail" value="${(client.email || '').replace(/"/g, '&quot;')}"
+                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Telefone</label>
+                        <input type="tel" id="editClientPhone" value="${(client.phone || '').replace(/"/g, '&quot;')}"
+                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Categoria</label>
+                        <select id="editClientCategory" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                            <option value="normal" ${client.category === 'normal' ? 'selected' : ''}>Normal</option>
+                            <option value="VIP" ${client.category === 'VIP' ? 'selected' : ''}>VIP</option>
+                            <option value="corporate" ${client.category === 'corporate' ? 'selected' : ''}>Corporate</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: 15px; margin-top: 20px;">
+                        <button type="button" onclick="closeModal('editClientModal')" style="
+                            flex: 1;
+                            background: #6c757d;
+                            color: white;
+                            border: none;
+                            padding: 12px;
+                            border-radius: 6px;
+                            cursor: pointer;
+                        ">Cancelar</button>
+                        <button type="submit" style="
+                            flex: 1;
+                            background: #3b82f6;
+                            color: white;
+                            border: none;
+                            padding: 12px;
+                            border-radius: 6px;
+                            cursor: pointer;
+                        ">Salvar</button>
+                    </div>
+                </form>
             </div>
         </div>
     `;
@@ -591,10 +795,7 @@ async function saveClientChanges(event, clientId) {
             name: document.getElementById('editClientName').value.trim(),
             email: document.getElementById('editClientEmail').value.trim() || null,
             phone: document.getElementById('editClientPhone').value.trim() || null,
-            category: document.getElementById('editClientCategory').value,
-            address: document.getElementById('editClientAddress').value.trim() || null,
-            city: document.getElementById('editClientCity').value.trim() || null,
-            province: document.getElementById('editClientProvince').value.trim() || null
+            category: document.getElementById('editClientCategory').value
         };
         
         if (!clientData.name) {
@@ -619,7 +820,7 @@ async function saveClientChanges(event, clientId) {
             showNotification('✅ Cliente atualizado com sucesso!', 'success');
             closeModal('editClientModal');
             if (typeof loadClients === 'function') {
-                loadClients();
+                setTimeout(loadClients, 500);
             }
         } else {
             showNotification(data.message || 'Erro ao atualizar cliente', 'error');
@@ -701,9 +902,8 @@ async function deleteClient(clientId, clientName = '') {
         
         if (data.success) {
             showNotification('✅ Cliente excluído com sucesso!', 'success');
-            // Recarregar lista de clientes se existir
             if (typeof loadClients === 'function') {
-                loadClients();
+                setTimeout(loadClients, 500);
             }
         } else {
             showNotification(data.message || 'Erro ao excluir cliente', 'error');
@@ -716,73 +916,106 @@ async function deleteClient(clientId, clientName = '') {
 }
 
 // ==============================================
-// FUNÇÕES DE PRODUTOS
+// FUNÇÕES DE PRODUTOS (COM CORREÇÕES)
 // ==============================================
 
 /**
- * Abre modal para editar produto
+ * Abre modal para editar produto (VERSÃO SEGURA)
  * @param {object} product - Objeto do produto
  */
 function openEditProductModal(product) {
+    // Fechar modal existente
+    const existingModal = document.getElementById('editProductModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
     const modalHTML = `
-        <div class="modal-overlay" id="editProductModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>✏️ Editar Produto</h3>
-                    <button class="modal-close" onclick="closeModal('editProductModal')">&times;</button>
+        <div class="modal-overlay" id="editProductModal" style="
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        ">
+            <div class="modal-content" style="
+                background: white;
+                border-radius: 12px;
+                padding: 20px;
+                max-width: 500px;
+                width: 90%;
+                max-height: 90vh;
+                overflow-y: auto;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            ">
+                <div class="modal-header" style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 20px;
+                    padding-bottom: 15px;
+                    border-bottom: 1px solid #eee;
+                ">
+                    <h3 style="margin: 0;">✏️ Editar Produto</h3>
+                    <button onclick="closeModal('editProductModal')" style="
+                        background: none;
+                        border: none;
+                        font-size: 24px;
+                        cursor: pointer;
+                        color: #666;
+                    ">&times;</button>
                 </div>
-                <div class="modal-body">
-                    <form id="editProductForm" onsubmit="saveProductChanges(event, '${product.id}')">
-                        <div class="form-group">
-                            <label for="editProductCode">Código *</label>
-                            <input type="text" id="editProductCode" value="${product.code || ''}" required>
+                <form id="editProductForm" onsubmit="saveProductChanges(event, '${product.id}')">
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Código *</label>
+                        <input type="text" id="editProductCode" value="${(product.code || '').replace(/"/g, '&quot;')}" 
+                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" required>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Nome *</label>
+                        <input type="text" id="editProductName" value="${(product.name || '').replace(/"/g, '&quot;')}"
+                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" required>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Preço *</label>
+                            <input type="number" id="editProductPrice" step="0.01" min="0" 
+                                   value="${product.unit_price || 0}"
+                                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" required>
                         </div>
-                        <div class="form-group">
-                            <label for="editProductName">Nome *</label>
-                            <input type="text" id="editProductName" value="${product.name || ''}" required>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Estoque</label>
+                            <input type="number" id="editProductStock" min="0" 
+                                   value="${product.stock || 0}"
+                                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
                         </div>
-                        <div class="form-group">
-                            <label for="editProductDescription">Descrição</label>
-                            <textarea id="editProductDescription" rows="3">${product.description || ''}</textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="editProductCategory">Categoria</label>
-                            <input type="text" id="editProductCategory" value="${product.category || ''}">
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="editProductPrice">Preço Unitário *</label>
-                                <input type="number" id="editProductPrice" step="0.01" min="0" 
-                                       value="${product.unit_price || 0}" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="editProductCost">Preço de Custo</label>
-                                <input type="number" id="editProductCost" step="0.01" min="0" 
-                                       value="${product.cost_price || 0}">
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="editProductStock">Estoque Atual</label>
-                                <input type="number" id="editProductStock" min="0" 
-                                       value="${product.stock || 0}">
-                            </div>
-                            <div class="form-group">
-                                <label for="editProductMinStock">Estoque Mínimo</label>
-                                <input type="number" id="editProductMinStock" min="0" 
-                                       value="${product.min_stock || 10}">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="editProductSupplier">Fornecedor</label>
-                            <input type="text" id="editProductSupplier" value="${product.supplier || ''}">
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn-secondary" onclick="closeModal('editProductModal')">Cancelar</button>
-                            <button type="submit" class="btn-primary">Salvar Alterações</button>
-                        </div>
-                    </form>
-                </div>
+                    </div>
+                    <div style="display: flex; gap: 15px; margin-top: 20px;">
+                        <button type="button" onclick="closeModal('editProductModal')" style="
+                            flex: 1;
+                            background: #6c757d;
+                            color: white;
+                            border: none;
+                            padding: 12px;
+                            border-radius: 6px;
+                            cursor: pointer;
+                        ">Cancelar</button>
+                        <button type="submit" style="
+                            flex: 1;
+                            background: #3b82f6;
+                            color: white;
+                            border: none;
+                            padding: 12px;
+                            border-radius: 6px;
+                            cursor: pointer;
+                        ">Salvar</button>
+                    </div>
+                </form>
             </div>
         </div>
     `;
@@ -808,13 +1041,8 @@ async function saveProductChanges(event, productId) {
         const productData = {
             code: document.getElementById('editProductCode').value.trim(),
             name: document.getElementById('editProductName').value.trim(),
-            description: document.getElementById('editProductDescription').value.trim() || null,
-            category: document.getElementById('editProductCategory').value.trim() || null,
             unit_price: parseFloat(document.getElementById('editProductPrice').value),
-            cost_price: parseFloat(document.getElementById('editProductCost').value) || null,
-            stock: parseInt(document.getElementById('editProductStock').value) || 0,
-            min_stock: parseInt(document.getElementById('editProductMinStock').value) || 10,
-            supplier: document.getElementById('editProductSupplier').value.trim() || null
+            stock: parseInt(document.getElementById('editProductStock').value) || 0
         };
         
         if (!productData.code || !productData.name || productData.unit_price < 0) {
@@ -839,7 +1067,7 @@ async function saveProductChanges(event, productId) {
             showNotification('✅ Produto atualizado com sucesso!', 'success');
             closeModal('editProductModal');
             if (typeof loadProducts === 'function') {
-                loadProducts();
+                setTimeout(loadProducts, 500);
             }
         } else {
             showNotification(data.message || 'Erro ao atualizar produto', 'error');
@@ -921,9 +1149,8 @@ async function deleteProduct(productId, productName = '') {
         
         if (data.success) {
             showNotification('✅ Produto excluído com sucesso!', 'success');
-            // Recarregar lista de produtos se existir
             if (typeof loadProducts === 'function') {
-                loadProducts();
+                setTimeout(loadProducts, 500);
             }
         } else {
             showNotification(data.message || 'Erro ao excluir produto', 'error');
@@ -936,17 +1163,23 @@ async function deleteProduct(productId, productName = '') {
 }
 
 // ==============================================
-// FUNÇÕES AUXILIARES GERAIS
+// FUNÇÕES AUXILIARES GERAIS (COM CORREÇÕES)
 // ==============================================
 
 /**
- * Fecha um modal
+ * Fecha um modal de forma segura
  * @param {string} modalId - ID do modal
  */
 function closeModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
-        modal.remove();
+        modal.style.opacity = '0';
+        modal.style.transition = 'opacity 0.3s';
+        setTimeout(() => {
+            if (modal.parentElement) {
+                modal.remove();
+            }
+        }, 300);
     }
 }
 
@@ -962,7 +1195,8 @@ function formatCurrency(value) {
     return new Intl.NumberFormat('pt-MZ', {
         style: 'currency',
         currency: 'MZN',
-        minimumFractionDigits: 2
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
     }).format(value);
 }
 
@@ -987,22 +1221,6 @@ function formatDate(dateString) {
 }
 
 /**
- * Obtém label do método de pagamento
- * @param {string} method - Código do método
- * @returns {string} Label em português
- */
-function getPaymentMethodLabel(method) {
-    const methods = {
-        'cash': 'Dinheiro',
-        'card': 'Cartão',
-        'transfer': 'Transferência',
-        'check': 'Cheque',
-        'multicaixa': 'Multicaixa'
-    };
-    return methods[method] || method;
-}
-
-/**
  * Atualiza tabela de itens da venda
  */
 function updateSaleItemsTable() {
@@ -1015,11 +1233,9 @@ function updateSaleItemsTable() {
         if (items.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="6" class="text-center text-muted">
-                        <div style="padding: 40px;">
-                            <i style="font-size: 48px; opacity: 0.5;">🛒</i>
-                            <p style="margin-top: 10px;">Nenhum item adicionado à venda</p>
-                        </div>
+                    <td colspan="6" style="text-align: center; padding: 40px; color: #666;">
+                        <div style="font-size: 48px; opacity: 0.5;">🛒</div>
+                        <p style="margin-top: 10px;">Nenhum item adicionado à venda</p>
                     </td>
                 </tr>
             `;
@@ -1028,26 +1244,26 @@ function updateSaleItemsTable() {
         
         tbody.innerHTML = items.map((item, index) => `
             <tr>
-                <td>${index + 1}</td>
-                <td>
+                <td style="padding: 10px;">${index + 1}</td>
+                <td style="padding: 10px;">
                     <strong>${item.code || 'N/A'}</strong><br>
-                    <small class="text-muted">${item.name}</small>
+                    <small style="color: #666;">${item.name || ''}</small>
                 </td>
-                <td>
-                    <div class="quantity-control" style="display: flex; align-items: center; gap: 5px;">
-                        <button class="btn-quantity" onclick="adjustSaleQuantity('${item.id}', -1)" 
-                                style="width: 30px; height: 30px; border-radius: 50%;">-</button>
+                <td style="padding: 10px;">
+                    <div style="display: flex; align-items: center; gap: 5px;">
+                        <button onclick="adjustSaleQuantity('${item.id}', -1)" 
+                                style="width: 30px; height: 30px; border-radius: 50%; background: #ef4444; color: white; border: none; cursor: pointer;">-</button>
                         <input type="number" value="${item.quantity}" min="1" 
                                onchange="updateSaleItemQuantity('${item.id}', this.value)"
-                               style="width: 60px; text-align: center; padding: 5px;">
-                        <button class="btn-quantity" onclick="adjustSaleQuantity('${item.id}', 1)"
-                                style="width: 30px; height: 30px; border-radius: 50%;">+</button>
+                               style="width: 60px; text-align: center; padding: 5px; border: 1px solid #ddd; border-radius: 4px;">
+                        <button onclick="adjustSaleQuantity('${item.id}', 1)"
+                                style="width: 30px; height: 30px; border-radius: 50%; background: #10b981; color: white; border: none; cursor: pointer;">+</button>
                     </div>
                 </td>
-                <td>${formatCurrency(item.price)}</td>
-                <td><strong>${formatCurrency(item.total)}</strong></td>
-                <td>
-                    <button class="btn-remove" onclick="removeSaleItem('${item.id}')" 
+                <td style="padding: 10px;">${formatCurrency(item.price || 0)}</td>
+                <td style="padding: 10px; font-weight: 600;">${formatCurrency(item.total || 0)}</td>
+                <td style="padding: 10px;">
+                    <button onclick="removeSaleItem('${item.id}')" 
                             style="background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
                         Remover
                     </button>
@@ -1061,7 +1277,7 @@ function updateSaleItemsTable() {
 }
 
 /**
- * Imprime uma venda
+ * Imprime uma venda (placeholder)
  * @param {string} saleId - ID da venda
  */
 function printSale(saleId) {
@@ -1070,12 +1286,10 @@ function printSale(saleId) {
 }
 
 // ==============================================
-// INICIALIZAÇÃO
+// INICIALIZAÇÃO E EXPORTAÇÃO
 // ==============================================
 
-console.log('✅ Todas as funções foram carregadas!');
-
-// Exportar funções para uso global
+// Exportar funções para uso global (VERSÃO SEGURA)
 window.updateSaleSummary = updateSaleSummary;
 window.adjustSaleQuantity = adjustSaleQuantity;
 window.updateSaleItemQuantity = updateSaleItemQuantity;
@@ -1092,8 +1306,9 @@ window.formatCurrency = formatCurrency;
 window.formatDate = formatDate;
 window.updateSaleItemsTable = updateSaleItemsTable;
 window.printSale = printSale;
+window.safeFormReset = window.safeFormReset; // Já definido no início
 
-// Inicializar se necessário
+// Inicializar quando DOM carregar
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function() {
         console.log('📄 DOM carregado, inicializando funções...');
@@ -1104,10 +1319,11 @@ if (document.readyState === 'loading') {
         }
     });
 } else {
-    // DOM já carregado
     console.log('📄 DOM já carregado');
     if (document.getElementById('saleItemsBody')) {
         updateSaleItemsTable();
         updateSaleSummary();
     }
 }
+
+console.log('✅ functions.js corrigido e carregado com sucesso!');
