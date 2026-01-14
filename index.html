@@ -7198,34 +7198,34 @@
             }
             
             const resultsDiv = document.getElementById('customReportResults');
-            resultsDiv.innerHTML = `
-                <div style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
-                    <h4 style="color: var(--bizzflow-primary); margin-bottom: 15px;">
-                        Relatório ${reportType === 'sales' ? 'de Vendas' : reportType === 'products' ? 'de Produtos' : reportType === 'clients' ? 'de Clientes' : 'Financeiro'}
-                    </h4>
-                    <div style="margin-bottom: 15px;">
-                        <strong>Período:</strong> ${startDate} a ${endDate}
-                    </div>
-                    <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                        <strong>Resumo:</strong>
-                        <div style="margin-top: 10px;">
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                                <span>Registos encontrados:</span>
-                                <span style="font-weight: 600;">${Math.floor(Math.random() * 100) + 50}</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                                <span>Total gerado:</span>
-                                <span style="font-weight: 600; color: #27ae60;">${(Math.random() * 100000).toFixed(2)} MZN</span>
-                            </div>
-                        </div>
-                    </div>
-                    <button class="btn btn-primary" onclick="exportData('${reportType}', \\'pdf\\')">
-                        <i class="fas fa-download"></i> Exportar Relatório
-                    </button>
+resultsDiv.innerHTML = \`
+    <div style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
+        <h4 style="color: var(--bizzflow-primary); margin-bottom: 15px;">
+            Relatório \${reportType === 'sales' ? 'de Vendas' : reportType === 'products' ? 'de Produtos' : reportType === 'clients' ? 'de Clientes' : 'Financeiro'}
+        </h4>
+        <div style="margin-bottom: 15px;">
+            <strong>Período:</strong> \${startDate} a \${endDate}
+        </div>
+        <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+            <strong>Resumo:</strong>
+            <div style="margin-top: 10px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span>Registos encontrados:</span>
+                    <span style="font-weight: 600;">\${Math.floor(Math.random() * 100) + 50}</span>
                 </div>
-            `;
-            
-            showAlert('Relatório gerado com sucesso!', 'success');
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span>Total gerado:</span>
+                    <span style="font-weight: 600; color: #27ae60;">\${(Math.random() * 100000).toFixed(2)} MZN</span>
+                </div>
+            </div>
+        </div>
+        <button class="btn btn-primary" onclick="exportData('\\'\${reportType}\\'', 'pdf')">
+            <i class="fas fa-download"></i> Exportar Relatório
+        </button>
+    </div>
+\`;
+
+showAlert('Relatório gerado com sucesso!', 'success');
         }
         
         // Mostrar/ocultar datas personalizadas
@@ -7247,6 +7247,8 @@
                 event.stopPropagation();
             };
         });
+    </script>
+    
     <script src="js/functions.js"></script>
 </body>
 </html>
