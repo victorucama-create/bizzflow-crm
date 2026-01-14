@@ -9,6 +9,180 @@
 // ========== CORREÇÕES DE EMERGÊNCIA ==========
 console.log('🚀 Inicializando BizzFlow CRM com correções...');
 
+// ========== CORREÇÃO ESPECÍFICA PARA salesChart ==========
+console.log('🎯 Aplicando correção específica para salesChart.destroy...');
+
+// 1. VERIFICAR E CARREGAR CHART.JS
+function ensureChartJS() {
+    return new Promise((resolve) => {
+        if (typeof Chart !== 'undefined') {
+            console.log('✅ Chart.js já carregado');
+            resolve(true);
+            return;
+        }
+        
+        console.log('📥 Chart.js não encontrado, carregando...');
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js';
+        script.async = true;
+        
+        script.onload = () => {
+            console.log('✅ Chart.js carregado com sucesso');
+            initCharts();
+            resolve(true);
+        };
+        
+        script.onerror = () => {
+            console.error('❌ Falha ao carregar Chart.js');
+            createMockCharts();
+            resolve(false);
+        };
+        
+        document.head.appendChild(script);
+    });
+}
+
+// 2. INICIALIZAR GRÁFICOS REAIS SE CHART.JS ESTIVER DISPONÍVEL
+function initCharts() {
+    console.log('📈 Inicializando gráficos reais...');
+    
+    // Obter elementos canvas
+    const salesCanvas = document.getElementById('salesChart');
+    const productsCanvas = document.getElementById('productsChart');
+    
+    // Inicializar salesChart se canvas existir
+    if (salesCanvas && typeof Chart !== 'undefined') {
+        try {
+            window.salesChart = new Chart(salesCanvas, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Vendas',
+                        data: [],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+            console.log('✅ salesChart inicializado com sucesso');
+        } catch (error) {
+            console.error('❌ Erro ao criar salesChart:', error);
+            createMockCharts();
+        }
+    } else {
+        createMockCharts();
+    }
+}
+
+// 3. CRIAR GRÁFICOS MOCK (SEGURANÇA)
+function createMockCharts() {
+    console.log('🛡️ Criando gráficos mock para segurança...');
+    
+    window.salesChart = {
+        destroy: function() { 
+            console.log('✅ salesChart.destroy() [mock]'); 
+        },
+        update: function() { 
+            console.log('✅ salesChart.update() [mock]'); 
+            return this;
+        },
+        clear: function() { return this; },
+        stop: function() { return this; },
+        resize: function() { return this; },
+        toBase64Image: function() { return ''; },
+        data: { datasets: [], labels: [] },
+        options: {},
+        config: {}
+    };
+    
+    window.productsChart = {
+        destroy: function() { 
+            console.log('✅ productsChart.destroy() [mock]'); 
+        },
+        update: function() { 
+            console.log('✅ productsChart.update() [mock]'); 
+            return this;
+        }
+    };
+    
+    console.log('✅ Gráficos mock criados - sem erros!');
+}
+
+// 4. SUBSTITUIR FUNÇÃO updateCharts PROBLEMÁTICA
+function createSafeUpdateCharts() {
+    console.log('🔄 Criando updateCharts segura...');
+    
+    // Salvar referência à função original se existir
+    const originalUpdateCharts = window.updateCharts;
+    
+    // Criar nova função segura
+    window.updateCharts = function() {
+        console.log('📊 updateCharts() chamada (com segurança)');
+        
+        // Verificar se Chart.js está disponível
+        if (typeof Chart === 'undefined') {
+            console.warn('⚠️ Chart.js não disponível');
+            return Promise.resolve(false);
+        }
+        
+        // Verificar se salesChart existe
+        if (!window.salesChart || typeof window.salesChart.destroy !== 'function') {
+            console.warn('⚠️ salesChart não inicializado, inicializando...');
+            initCharts();
+        }
+        
+        // Se temos uma função original, tentar executá-la
+        if (typeof originalUpdateCharts === 'function') {
+            try {
+                return originalUpdateCharts();
+            } catch (error) {
+                console.error('❌ Erro na updateCharts original:', error);
+                return false;
+            }
+        }
+        
+        // Se não há função original, fazer algo básico
+        console.log('✅ updateCharts executada com segurança');
+        return true;
+    };
+}
+
+// 5. INICIALIZAR TUDO QUANDO O DOM CARREGAR
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('🏁 DOM carregado, configurando gráficos...');
+    
+    // Primeiro garantir que Chart.js existe
+    await ensureChartJS();
+    
+    // Depois inicializar gráficos
+    initCharts();
+    
+    // Finalmente criar função segura
+    createSafeUpdateCharts();
+    
+    console.log('✅ Sistema de gráficos configurado com segurança');
+});
+
+// Inicializar imediatamente se DOM já carregado
+if (document.readyState !== 'loading') {
+    setTimeout(() => {
+        ensureChartJS().then(() => {
+            initCharts();
+            createSafeUpdateCharts();
+        });
+    }, 100);
+}
+
+console.log('✅ Correção para salesChart.destroy aplicada!');
+// ========== FIM DA CORREÇÃO ==========
 // 1. GARANTIR QUE CHART.JS EXISTA
 if (typeof Chart === 'undefined') {
     console.warn('📊 Chart.js não encontrado, inicializando objetos seguros...');
