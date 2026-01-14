@@ -16,8 +16,8 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <!-- Chart.js versão mais recente e estável -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
         :root {
@@ -1223,6 +1223,12 @@
             background: #cce5ff;
             color: #004085;
         }
+        
+        /* Canvas para gráficos */
+        canvas {
+            width: 100% !important;
+            height: 250px !important;
+        }
     </style>
 </head>
 <body>
@@ -1657,11 +1663,11 @@
                     <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 25px;">
                         <div style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
                             <h3 style="margin-bottom: 15px; color: var(--bizzflow-dark);">Vendas Diárias</h3>
-                            <canvas id="salesChart" height="250"></canvas>
+                            <canvas id="salesChart"></canvas>
                         </div>
                         <div style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
                             <h3 style="margin-bottom: 15px; color: var(--bizzflow-dark);">Top Categorias</h3>
-                            <canvas id="categoryChart" height="250"></canvas>
+                            <canvas id="categoryChart"></canvas>
                         </div>
                     </div>
                 </div>
@@ -1985,7 +1991,7 @@
                     <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 25px; margin-top: 20px;">
                         <div>
                             <h3 style="margin-bottom: 15px; color: var(--bizzflow-dark);">Fluxo de Caixa</h3>
-                            <canvas id="cashflowChart" height="300"></canvas>
+                            <canvas id="cashflowChart"></canvas>
                         </div>
                         <div>
                             <h3 style="margin-bottom: 15px; color: var(--bizzflow-dark);">Saldo Atual</h3>
@@ -2055,11 +2061,11 @@
                         <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 25px; margin-bottom: 30px;">
                             <div style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
                                 <h3 style="margin-bottom: 15px; color: var(--bizzflow-dark);">Vendas por Dia</h3>
-                                <canvas id="reportSalesChart" height="250"></canvas>
+                                <canvas id="reportSalesChart"></canvas>
                             </div>
                             <div style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
                                 <h3 style="margin-bottom: 15px; color: var(--bizzflow-dark);">Top Produtos</h3>
-                                <canvas id="reportProductsChart" height="250"></canvas>
+                                <canvas id="reportProductsChart"></canvas>
                             </div>
                         </div>
                         
@@ -2300,7 +2306,7 @@
                     <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 25px; margin-top: 30px;">
                         <div style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
                             <h3 style="margin-bottom: 15px; color: var(--bizzflow-dark);">Performance do Investimento</h3>
-                            <canvas id="investmentChart" height="300"></canvas>
+                            <canvas id="investmentChart"></canvas>
                         </div>
                         <div>
                             <h3 style="margin-bottom: 15px; color: var(--bizzflow-dark);">Próximos Passos</h3>
@@ -4374,11 +4380,17 @@
         // ==============================================
         
         function openModal(modalId) {
-            document.getElementById(modalId).style.display = 'flex';
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'flex';
+            }
         }
         
         function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none';
+            }
         }
         
         function showPage(pageId) {
@@ -4491,17 +4503,23 @@
             document.querySelectorAll('[data-tab]').forEach(tab => {
                 tab.classList.remove('active');
             });
-            document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+            const tabElement = document.querySelector(`[data-tab="${tabId}"]`);
+            if (tabElement) {
+                tabElement.classList.add('active');
+            }
             
             // Atualizar conteúdo
             document.querySelectorAll('.tab-content').forEach(content => {
                 content.classList.remove('active');
             });
-            document.getElementById(tabId + 'Tab').classList.add('active');
+            const tabContentElement = document.getElementById(tabId + 'Tab');
+            if (tabContentElement) {
+                tabContentElement.classList.add('active');
+            }
         }
         
         // ==============================================
-        // FUNÇÕES DE GRÁFICOS
+        // FUNÇÕES DE GRÁFICOS - CORRIGIDAS
         // ==============================================
         
         function updateCharts() {
@@ -4542,13 +4560,15 @@
                         window.salesChartInstance.destroy();
                     }
                     
-                    window.salesChartInstance = new Chart(salesChartCtx.getContext('2d'), {
+                    const labels = last7Days.map(d => {
+                        const date = new Date(d);
+                        return date.toLocaleDateString('pt-MZ', { day: '2-digit', month: '2-digit' });
+                    });
+                    
+                    window.salesChartInstance = new Chart(salesChartCtx, {
                         type: 'line',
                         data: {
-                            labels: last7Days.map(d => {
-                                const date = new Date(d);
-                                return date.toLocaleDateString('pt-MZ', { day: '2-digit', month: '2-digit' });
-                            }),
+                            labels: labels,
                             datasets: [{
                                 label: 'Vendas (MZN)',
                                 data: Object.values(salesByDay),
@@ -4561,6 +4581,7 @@
                         },
                         options: {
                             responsive: true,
+                            maintainAspectRatio: false,
                             plugins: {
                                 legend: {
                                     display: false
@@ -4574,7 +4595,7 @@
                                     },
                                     ticks: {
                                         callback: function(value) {
-                                            return value.toFixed(2) + ' MZN';
+                                            return 'MZN ' + value.toFixed(2);
                                         }
                                     }
                                 },
@@ -4604,7 +4625,7 @@
                         window.categoryChartInstance.destroy();
                     }
                     
-                    window.categoryChartInstance = new Chart(categoryChartCtx.getContext('2d'), {
+                    window.categoryChartInstance = new Chart(categoryChartCtx, {
                         type: 'doughnut',
                         data: {
                             labels: Object.keys(categories),
@@ -4623,6 +4644,7 @@
                         },
                         options: {
                             responsive: true,
+                            maintainAspectRatio: false,
                             plugins: {
                                 legend: {
                                     position: 'bottom'
@@ -4642,6 +4664,7 @@
             console.log('📊 Atualizando gráficos de relatórios...');
             
             const sales = getSales();
+            const products = getProducts();
             
             if (typeof Chart === 'undefined') {
                 console.warn('Chart.js não disponível');
@@ -4679,7 +4702,7 @@
                         return date.toLocaleDateString('pt-MZ', { day: '2-digit', month: '2-digit' });
                     });
                     
-                    window.reportSalesChartInstance = new Chart(reportSalesChartCtx.getContext('2d'), {
+                    window.reportSalesChartInstance = new Chart(reportSalesChartCtx, {
                         type: 'bar',
                         data: {
                             labels: labels,
@@ -4693,6 +4716,7 @@
                         },
                         options: {
                             responsive: true,
+                            maintainAspectRatio: false,
                             plugins: {
                                 legend: {
                                     display: false
@@ -4703,8 +4727,66 @@
                                     beginAtZero: true,
                                     ticks: {
                                         callback: function(value) {
-                                            return value.toFixed(2) + ' MZN';
+                                            return 'MZN ' + value.toFixed(2);
                                         }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+                
+                // Gráfico de produtos para relatórios
+                const reportProductsChartCtx = document.getElementById('reportProductsChart');
+                if (reportProductsChartCtx) {
+                    // Destruir gráfico existente
+                    if (window.reportProductsChartInstance) {
+                        window.reportProductsChartInstance.destroy();
+                    }
+                    
+                    // Calcular produtos mais vendidos
+                    const productSales = {};
+                    sales.forEach(sale => {
+                        sale.items.forEach(item => {
+                            if (!productSales[item.name]) {
+                                productSales[item.name] = 0;
+                            }
+                            productSales[item.name] += item.quantity;
+                        });
+                    });
+                    
+                    const sortedProducts = Object.entries(productSales)
+                        .sort((a, b) => b[1] - a[1])
+                        .slice(0, 5);
+                    
+                    const productLabels = sortedProducts.map(p => p[0]);
+                    const productData = sortedProducts.map(p => p[1]);
+                    
+                    window.reportProductsChartInstance = new Chart(reportProductsChartCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: productLabels,
+                            datasets: [{
+                                label: 'Quantidade Vendida',
+                                data: productData,
+                                backgroundColor: '#2ecc71',
+                                borderColor: '#27ae60',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        stepSize: 1
                                     }
                                 }
                             }
@@ -4720,8 +4802,6 @@
         
         function updateFinancialCharts() {
             console.log('💰 Atualizando gráficos financeiros...');
-            
-            const financial = getFinancial();
             
             if (typeof Chart === 'undefined') {
                 console.warn('Chart.js não disponível');
@@ -4741,7 +4821,7 @@
                     const income = [45000, 52000, 48000, 61000, 55000, 59000];
                     const expenses = [22000, 25000, 23000, 28000, 26000, 27000];
                     
-                    window.cashflowChartInstance = new Chart(cashflowChartCtx.getContext('2d'), {
+                    window.cashflowChartInstance = new Chart(cashflowChartCtx, {
                         type: 'line',
                         data: {
                             labels: months,
@@ -4766,6 +4846,7 @@
                         },
                         options: {
                             responsive: true,
+                            maintainAspectRatio: false,
                             plugins: {
                                 legend: {
                                     position: 'top'
@@ -4776,7 +4857,7 @@
                                     beginAtZero: true,
                                     ticks: {
                                         callback: function(value) {
-                                            return value.toLocaleString('pt-MZ') + ' MZN';
+                                            return 'MZN ' + value.toLocaleString('pt-MZ');
                                         }
                                     }
                                 }
@@ -4793,8 +4874,6 @@
         
         function updateInvestmentChart() {
             console.log('📊 Atualizando gráfico de investimentos...');
-            
-            const investments = getInvestments();
             
             if (typeof Chart === 'undefined') {
                 console.warn('Chart.js não disponível');
@@ -4813,7 +4892,7 @@
                     const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'];
                     const values = [100000, 105000, 112000, 118000, 125000, 132000];
                     
-                    window.investmentChartInstance = new Chart(investmentChartCtx.getContext('2d'), {
+                    window.investmentChartInstance = new Chart(investmentChartCtx, {
                         type: 'line',
                         data: {
                             labels: months,
@@ -4829,6 +4908,7 @@
                         },
                         options: {
                             responsive: true,
+                            maintainAspectRatio: false,
                             plugins: {
                                 legend: {
                                     position: 'top'
@@ -4839,7 +4919,7 @@
                                     beginAtZero: false,
                                     ticks: {
                                         callback: function(value) {
-                                            return value.toLocaleString('pt-MZ') + ' MZN';
+                                            return 'MZN ' + value.toLocaleString('pt-MZ');
                                         }
                                     }
                                 }
@@ -4878,18 +4958,18 @@
                 document.getElementById('vendasHoje').textContent = todaySales.length;
                 
                 const totalSales = sales.reduce((sum, s) => sum + s.total, 0);
-                document.getElementById('totalVendas').textContent = totalSales.toLocaleString('pt-MZ', { minimumFractionDigits: 2 }) + ' MZN';
+                document.getElementById('totalVendas').textContent = 'MZN ' + totalSales.toLocaleString('pt-MZ', { minimumFractionDigits: 2 });
                 
                 // Atualizar estatísticas financeiras
-                document.getElementById('currentBalance').textContent = financial.current_balance.toLocaleString('pt-MZ', { minimumFractionDigits: 2 }) + ' MZN';
-                document.getElementById('monthlyIncome').textContent = financial.monthly_income.toLocaleString('pt-MZ', { minimumFractionDigits: 2 }) + ' MZN';
-                document.getElementById('monthlyExpenses').textContent = financial.monthly_expenses.toLocaleString('pt-MZ', { minimumFractionDigits: 2 }) + ' MZN';
-                document.getElementById('monthlyProfit').textContent = financial.monthly_profit.toLocaleString('pt-MZ', { minimumFractionDigits: 2 }) + ' MZN';
+                document.getElementById('currentBalance').textContent = 'MZN ' + financial.current_balance.toLocaleString('pt-MZ', { minimumFractionDigits: 2 });
+                document.getElementById('monthlyIncome').textContent = 'MZN ' + financial.monthly_income.toLocaleString('pt-MZ', { minimumFractionDigits: 2 });
+                document.getElementById('monthlyExpenses').textContent = 'MZN ' + financial.monthly_expenses.toLocaleString('pt-MZ', { minimumFractionDigits: 2 });
+                document.getElementById('monthlyProfit').textContent = 'MZN ' + financial.monthly_profit.toLocaleString('pt-MZ', { minimumFractionDigits: 2 });
                 
                 // Atualizar estatísticas de investimentos
                 document.getElementById('roiPercentage').textContent = investments.roi_percentage.toFixed(1) + '%';
                 document.getElementById('growthRate').textContent = investments.growth_rate.toFixed(1) + '%';
-                document.getElementById('totalInvestment').textContent = investments.total_invested.toLocaleString('pt-MZ', { minimumFractionDigits: 2 }) + ' MZN';
+                document.getElementById('totalInvestment').textContent = 'MZN ' + investments.total_invested.toLocaleString('pt-MZ', { minimumFractionDigits: 2 });
                 document.getElementById('profitMargin').textContent = investments.profit_margin.toFixed(1) + '%';
                 
                 // Atualizar tabela de vendas recentes
@@ -4903,7 +4983,7 @@
                             <td>${sale.receipt_no}</td>
                             <td>${sale.client_name || 'Cliente Avulso'}</td>
                             <td>${sale.date} ${sale.time || ''}</td>
-                            <td>${sale.total.toFixed(2)} MZN</td>
+                            <td>MZN ${sale.total.toFixed(2)}</td>
                             <td><span class="badge badge-success">Concluída</span></td>
                             <td>
                                 <button class="btn btn-sm btn-primary" onclick="viewSale(${sale.id})">
@@ -4957,7 +5037,7 @@
                     const monthlyRevenue = subscriptions
                         .filter(s => s.status === 'active')
                         .reduce((sum, s) => sum + s.price, 0);
-                    document.getElementById('receitaMensal').textContent = monthlyRevenue.toFixed(2) + ' MZN';
+                    document.getElementById('receitaMensal').textContent = 'MZN ' + monthlyRevenue.toFixed(2);
                 }
                 
                 // Atualizar gráficos
@@ -4997,7 +5077,7 @@
                                       client.type === 'wholesale' ? 'Atacado' : 'Regular'}
                                 </span>
                             </td>
-                            <td>${client.total_purchases.toFixed(2)} MZN</td>
+                            <td>MZN ${client.total_purchases.toFixed(2)}</td>
                             <td>${client.last_purchase || '-'}</td>
                             <td>
                                 <button class="btn btn-sm btn-primary" onclick="editClient(${client.id})">
@@ -5061,8 +5141,8 @@
                             <td>${product.code}</td>
                             <td>${product.name}</td>
                             <td>${product.category}</td>
-                            <td>${product.price.toFixed(2)} MZN</td>
-                            <td>${product.cost ? product.cost.toFixed(2) + ' MZN' : '-'}</td>
+                            <td>MZN ${product.price.toFixed(2)}</td>
+                            <td>${product.cost ? 'MZN ' + product.cost.toFixed(2) : '-'}</td>
                             <td>${product.stock}</td>
                             <td><span class="badge ${status}">${statusText}</span></td>
                             <td>
@@ -5119,7 +5199,7 @@
                             <td>${sale.client_name || 'Cliente Avulso'}</td>
                             <td>${sale.date} ${sale.time || ''}</td>
                             <td>${itemCount} itens</td>
-                            <td>${sale.total.toFixed(2)} MZN</td>
+                            <td>MZN ${sale.total.toFixed(2)}</td>
                             <td>${sale.payment_method}</td>
                             <td><span class="badge badge-success">Concluída</span></td>
                             <td>
@@ -5158,7 +5238,7 @@
                     document.getElementById('vendasHojeCount').textContent = todaySales.length;
                     document.getElementById('vendasSemanaCount').textContent = thisWeekSales.length;
                     document.getElementById('vendasMesCount').textContent = thisMonthSales.length;
-                    document.getElementById('faturamentoMes').textContent = monthlyRevenue.toLocaleString('pt-MZ', { minimumFractionDigits: 2 }) + ' MZN';
+                    document.getElementById('faturamentoMes').textContent = 'MZN ' + monthlyRevenue.toLocaleString('pt-MZ', { minimumFractionDigits: 2 });
                 }
                 
                 console.log('✅ Tabela de vendas atualizada');
@@ -5174,10 +5254,10 @@
                 const financial = getFinancial();
                 
                 // Atualizar dados financeiros básicos
-                document.getElementById('currentBalance').textContent = financial.current_balance.toLocaleString('pt-MZ', { minimumFractionDigits: 2 }) + ' MZN';
-                document.getElementById('monthlyIncome').textContent = financial.monthly_income.toLocaleString('pt-MZ', { minimumFractionDigits: 2 }) + ' MZN';
-                document.getElementById('monthlyExpenses').textContent = financial.monthly_expenses.toLocaleString('pt-MZ', { minimumFractionDigits: 2 }) + ' MZN';
-                document.getElementById('monthlyProfit').textContent = financial.monthly_profit.toLocaleString('pt-MZ', { minimumFractionDigits: 2 }) + ' MZN';
+                document.getElementById('currentBalance').textContent = 'MZN ' + financial.current_balance.toLocaleString('pt-MZ', { minimumFractionDigits: 2 });
+                document.getElementById('monthlyIncome').textContent = 'MZN ' + financial.monthly_income.toLocaleString('pt-MZ', { minimumFractionDigits: 2 });
+                document.getElementById('monthlyExpenses').textContent = 'MZN ' + financial.monthly_expenses.toLocaleString('pt-MZ', { minimumFractionDigits: 2 });
+                document.getElementById('monthlyProfit').textContent = 'MZN ' + financial.monthly_profit.toLocaleString('pt-MZ', { minimumFractionDigits: 2 });
                 
                 // Atualizar gráficos financeiros
                 setTimeout(updateFinancialCharts, 100);
@@ -5223,9 +5303,9 @@
                     }
                 });
                 
-                document.getElementById('reportTotalSales').textContent = totalSalesValue.toLocaleString('pt-MZ', { minimumFractionDigits: 2 }) + ' MZN';
+                document.getElementById('reportTotalSales').textContent = 'MZN ' + totalSalesValue.toLocaleString('pt-MZ', { minimumFractionDigits: 2 });
                 document.getElementById('reportTotalItems').textContent = totalItemsSold;
-                document.getElementById('reportAvgSale').textContent = avgSale.toLocaleString('pt-MZ', { minimumFractionDigits: 2 }) + ' MZN';
+                document.getElementById('reportAvgSale').textContent = 'MZN ' + avgSale.toLocaleString('pt-MZ', { minimumFractionDigits: 2 });
                 document.getElementById('reportTopProduct').textContent = topProduct;
                 
                 // Atualizar gráficos de relatórios
@@ -5246,7 +5326,7 @@
                 // Atualizar estatísticas de investimentos
                 document.getElementById('roiPercentage').textContent = investments.roi_percentage.toFixed(1) + '%';
                 document.getElementById('growthRate').textContent = investments.growth_rate.toFixed(1) + '%';
-                document.getElementById('totalInvestment').textContent = investments.total_invested.toLocaleString('pt-MZ', { minimumFractionDigits: 2 }) + ' MZN';
+                document.getElementById('totalInvestment').textContent = 'MZN ' + investments.total_invested.toLocaleString('pt-MZ', { minimumFractionDigits: 2 });
                 document.getElementById('profitMargin').textContent = investments.profit_margin.toFixed(1) + '%';
                 
                 // Atualizar gráfico de investimentos
@@ -5292,7 +5372,7 @@
                             ${plan.is_popular ? '<div class="plan-badge">Mais Popular</div>' : ''}
                             <h3>${plan.name}</h3>
                             <p>${plan.description}</p>
-                            <div class="plan-price">${plan.price.toFixed(2)} MZN <span>/mês</span></div>
+                            <div class="plan-price">MZN ${plan.price.toFixed(2)} <span>/mês</span></div>
                             <ul class="plan-features">
                                 ${featuresList}
                             </ul>
@@ -5338,7 +5418,7 @@
                             <td>${subscription.start_date}</td>
                             <td>${subscription.end_date || '-'}</td>
                             <td>${subscription.next_payment || '-'}</td>
-                            <td>${subscription.price.toFixed(2)} MZN</td>
+                            <td>MZN ${subscription.price.toFixed(2)}</td>
                             <td><span class="subscription-status ${statusClass}">${statusText}</span></td>
                             <td>
                                 <button class="btn btn-sm btn-primary" onclick="viewSubscription(${subscription.id})">
@@ -5365,7 +5445,7 @@
                     document.getElementById('totalAssinaturas').textContent = subscriptions.length;
                     document.getElementById('assinaturasAtivas').textContent = activeSubscriptions;
                     document.getElementById('assinaturasTrial').textContent = trialSubscriptions;
-                    document.getElementById('receitaMensal').textContent = monthlyRevenue.toLocaleString('pt-MZ', { minimumFractionDigits: 2 }) + ' MZN';
+                    document.getElementById('receitaMensal').textContent = 'MZN ' + monthlyRevenue.toLocaleString('pt-MZ', { minimumFractionDigits: 2 });
                 }
                 
                 console.log('✅ Tabela de assinaturas atualizada');
@@ -5453,7 +5533,7 @@
                             <td>${product.stock}</td>
                             <td>${product.min_stock}</td>
                             <td>${Math.ceil(product.min_stock * 2)}</td>
-                            <td>${stockValue.toFixed(2)} MZN</td>
+                            <td>MZN ${stockValue.toFixed(2)}</td>
                             <td><span class="badge ${status}">${statusText}</span></td>
                         `;
                         stockReportBody.appendChild(row);
@@ -5528,7 +5608,7 @@
                             <td>${member.role}</td>
                             <td>${member.contact}</td>
                             <td>${member.join_date}</td>
-                            <td>${member.sales.toFixed(2)} MZN</td>
+                            <td>MZN ${member.sales.toFixed(2)}</td>
                             <td><span class="badge ${statusClass}">${statusText}</span></td>
                             <td>
                                 <button class="btn btn-sm btn-primary" onclick="editTeamMember(${member.id})">
@@ -5547,7 +5627,7 @@
                     document.getElementById('membrosAtivos').textContent = team.filter(m => m.status === 'active').length;
                     
                     const totalSales = team.reduce((sum, m) => sum + m.sales, 0);
-                    document.getElementById('vendasEquipa').textContent = totalSales.toLocaleString('pt-MZ', { minimumFractionDigits: 2 }) + ' MZN';
+                    document.getElementById('vendasEquipa').textContent = 'MZN ' + totalSales.toLocaleString('pt-MZ', { minimumFractionDigits: 2 });
                     
                     const topSeller = team.reduce((max, m) => m.sales > max.sales ? m : max, team[0] || { name: '-' });
                     document.getElementById('topVendedor').textContent = topSeller.name;
@@ -5567,54 +5647,56 @@
                 const subscriptionSettings = getSubscriptionSettings();
                 
                 // Carregar configurações da empresa
-                document.getElementById('companyName').value = settings.company_name || '';
-                document.getElementById('companyNIF').value = settings.company_nif || '';
-                document.getElementById('companyAddress').value = settings.company_address || '';
-                document.getElementById('companyPhone').value = settings.company_phone || '';
-                document.getElementById('companyEmail').value = settings.company_email || '';
-                
-                // Carregar configurações de faturação
-                document.getElementById('invoicePrefix').value = settings.invoice_prefix || 'FAT';
-                document.getElementById('invoiceStartNumber').value = settings.invoice_start_number || 1001;
-                document.getElementById('invoiceFooter').value = settings.invoice_footer || 'Obrigado pela sua preferência!';
-                document.getElementById('autoPrintInvoice').checked = settings.auto_print_invoice !== false;
-                
-                // Carregar configurações gerais
-                document.getElementById('currency').value = settings.currency || 'MZN';
-                document.getElementById('taxRate').value = settings.tax_rate || 17;
-                document.getElementById('lowStockThreshold').value = settings.low_stock_threshold || 10;
-                document.getElementById('timezone').value = settings.timezone || 'Africa/Maputo';
-                
-                // Carregar notificações e alertas
-                document.getElementById('enableStockAlerts').checked = settings.enable_stock_alerts !== false;
-                document.getElementById('enableSalesReports').checked = settings.enable_sales_reports !== false;
-                document.getElementById('enableClientBirthdayAlerts').checked = settings.enable_client_birthday_alerts !== false;
-                document.getElementById('enableAutoBackup').checked = settings.enable_auto_backup !== false;
-                document.getElementById('backupFrequency').value = settings.backup_frequency || 'weekly';
-                
-                // Carregar configurações de assinatura
-                document.getElementById('subscriptionCurrency').value = subscriptionSettings.currency || 'MZN';
-                document.getElementById('trialPeriodDays').value = subscriptionSettings.trial_period_days || 7;
-                document.getElementById('gracePeriodDays').value = subscriptionSettings.grace_period_days || 3;
-                document.getElementById('autoRenewal').value = subscriptionSettings.auto_renewal || 'enabled';
-                document.getElementById('invoiceDaysBefore').value = subscriptionSettings.invoice_days_before || 7;
-                document.getElementById('reminderDays').value = subscriptionSettings.reminder_days ? subscriptionSettings.reminder_days.join(',') : '7,3,1';
-                
-                // Carregar métodos de pagamento
-                const paymentMethods = subscriptionSettings.payment_methods || ['Multicaixa', 'M-Pesa', 'E-Mola', 'Transferência'];
-                document.getElementById('paymentMulticaixa').checked = paymentMethods.includes('Multicaixa');
-                document.getElementById('paymentMPesa').checked = paymentMethods.includes('M-Pesa');
-                document.getElementById('paymentEMola').checked = paymentMethods.includes('E-Mola');
-                document.getElementById('paymentTransfer').checked = paymentMethods.includes('Transferência');
-                document.getElementById('paymentCard').checked = paymentMethods.includes('Cartão');
-                
-                // Carregar notificações de assinatura
-                document.getElementById('notifyTrialEnd').checked = subscriptionSettings.notify_trial_end !== false;
-                document.getElementById('notifyBeforeRenewal').checked = subscriptionSettings.notify_before_renewal !== false;
-                document.getElementById('notifyPaymentFailed').checked = subscriptionSettings.notify_payment_failed !== false;
-                document.getElementById('notifySubscriptionEnd').checked = subscriptionSettings.notify_subscription_end !== false;
-                document.getElementById('notifyAutoRenewal').checked = subscriptionSettings.notify_auto_renewal !== false;
-                document.getElementById('sendWelcomeEmail').checked = subscriptionSettings.send_welcome_email !== false;
+                if (document.getElementById('companyName')) {
+                    document.getElementById('companyName').value = settings.company_name || '';
+                    document.getElementById('companyNIF').value = settings.company_nif || '';
+                    document.getElementById('companyAddress').value = settings.company_address || '';
+                    document.getElementById('companyPhone').value = settings.company_phone || '';
+                    document.getElementById('companyEmail').value = settings.company_email || '';
+                    
+                    // Carregar configurações de faturação
+                    document.getElementById('invoicePrefix').value = settings.invoice_prefix || 'FAT';
+                    document.getElementById('invoiceStartNumber').value = settings.invoice_start_number || 1001;
+                    document.getElementById('invoiceFooter').value = settings.invoice_footer || 'Obrigado pela sua preferência!';
+                    document.getElementById('autoPrintInvoice').checked = settings.auto_print_invoice !== false;
+                    
+                    // Carregar configurações gerais
+                    document.getElementById('currency').value = settings.currency || 'MZN';
+                    document.getElementById('taxRate').value = settings.tax_rate || 17;
+                    document.getElementById('lowStockThreshold').value = settings.low_stock_threshold || 10;
+                    document.getElementById('timezone').value = settings.timezone || 'Africa/Maputo';
+                    
+                    // Carregar notificações e alertas
+                    document.getElementById('enableStockAlerts').checked = settings.enable_stock_alerts !== false;
+                    document.getElementById('enableSalesReports').checked = settings.enable_sales_reports !== false;
+                    document.getElementById('enableClientBirthdayAlerts').checked = settings.enable_client_birthday_alerts !== false;
+                    document.getElementById('enableAutoBackup').checked = settings.enable_auto_backup !== false;
+                    document.getElementById('backupFrequency').value = settings.backup_frequency || 'weekly';
+                    
+                    // Carregar configurações de assinatura
+                    document.getElementById('subscriptionCurrency').value = subscriptionSettings.currency || 'MZN';
+                    document.getElementById('trialPeriodDays').value = subscriptionSettings.trial_period_days || 7;
+                    document.getElementById('gracePeriodDays').value = subscriptionSettings.grace_period_days || 3;
+                    document.getElementById('autoRenewal').value = subscriptionSettings.auto_renewal || 'enabled';
+                    document.getElementById('invoiceDaysBefore').value = subscriptionSettings.invoice_days_before || 7;
+                    document.getElementById('reminderDays').value = subscriptionSettings.reminder_days ? subscriptionSettings.reminder_days.join(',') : '7,3,1';
+                    
+                    // Carregar métodos de pagamento
+                    const paymentMethods = subscriptionSettings.payment_methods || ['Multicaixa', 'M-Pesa', 'E-Mola', 'Transferência'];
+                    document.getElementById('paymentMulticaixa').checked = paymentMethods.includes('Multicaixa');
+                    document.getElementById('paymentMPesa').checked = paymentMethods.includes('M-Pesa');
+                    document.getElementById('paymentEMola').checked = paymentMethods.includes('E-Mola');
+                    document.getElementById('paymentTransfer').checked = paymentMethods.includes('Transferência');
+                    document.getElementById('paymentCard').checked = paymentMethods.includes('Cartão');
+                    
+                    // Carregar notificações de assinatura
+                    document.getElementById('notifyTrialEnd').checked = subscriptionSettings.notify_trial_end !== false;
+                    document.getElementById('notifyBeforeRenewal').checked = subscriptionSettings.notify_before_renewal !== false;
+                    document.getElementById('notifyPaymentFailed').checked = subscriptionSettings.notify_payment_failed !== false;
+                    document.getElementById('notifySubscriptionEnd').checked = subscriptionSettings.notify_subscription_end !== false;
+                    document.getElementById('notifyAutoRenewal').checked = subscriptionSettings.notify_auto_renewal !== false;
+                    document.getElementById('sendWelcomeEmail').checked = subscriptionSettings.send_welcome_email !== false;
+                }
                 
                 console.log('✅ Configurações carregadas');
             } catch (error) {
@@ -5780,7 +5862,7 @@
                     }
                 }
                 
-                showNotification(`Venda ${receiptNo} registrada com sucesso! Troco: ${saleData.change.toFixed(2)} MZN`, 'success');
+                showNotification(`Venda ${receiptNo} registrada com sucesso! Troco: MZN ${saleData.change.toFixed(2)}`, 'success');
                 closeModal('newSaleModal');
                 updateDashboard();
                 updateSalesTable();
@@ -5810,8 +5892,8 @@
                         <tr>
                             <td>${item.name}</td>
                             <td>${item.quantity}</td>
-                            <td>${item.price.toFixed(2)} MZN</td>
-                            <td>${item.total.toFixed(2)} MZN</td>
+                            <td>MZN ${item.price.toFixed(2)}</td>
+                            <td>MZN ${item.total.toFixed(2)}</td>
                         </tr>
                     `).join('');
                     
@@ -5849,27 +5931,27 @@
                                     <div style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
                                         <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                                             <span>Subtotal:</span>
-                                            <span>${sale.subtotal.toFixed(2)} MZN</span>
+                                            <span>MZN ${sale.subtotal.toFixed(2)}</span>
                                         </div>
                                         <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                                             <span>Desconto:</span>
-                                            <span>${sale.discount.toFixed(2)} MZN</span>
+                                            <span>MZN ${sale.discount.toFixed(2)}</span>
                                         </div>
                                         <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                                             <span>IVA (17%):</span>
-                                            <span>${sale.tax.toFixed(2)} MZN</span>
+                                            <span>MZN ${sale.tax.toFixed(2)}</span>
                                         </div>
                                         <div style="display: flex; justify-content: space-between; font-weight: bold; padding-top: 10px; border-top: 1px solid #ddd;">
                                             <span>Total:</span>
-                                            <span>${sale.total.toFixed(2)} MZN</span>
+                                            <span>MZN ${sale.total.toFixed(2)}</span>
                                         </div>
                                         <div style="display: flex; justify-content: space-between; margin-top: 10px;">
                                             <span>Valor Recebido:</span>
-                                            <span>${sale.amount_received.toFixed(2)} MZN</span>
+                                            <span>MZN ${sale.amount_received.toFixed(2)}</span>
                                         </div>
                                         <div style="display: flex; justify-content: space-between; font-weight: bold; margin-top: 10px; color: #27ae60;">
                                             <span>Troco:</span>
-                                            <span>${sale.change.toFixed(2)} MZN</span>
+                                            <span>MZN ${sale.change.toFixed(2)}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -6100,7 +6182,7 @@
         }
         
         // ==============================================
-        // FUNÇÕES DE EXPORTAÇÃO/IMPORTAÇÃO
+        // FUNÇÕES DE EXPORTAÇÃO/IMPORTAÇÃO - CORRIGIDAS
         // ==============================================
         
         function exportData(type, format) {
@@ -6161,7 +6243,7 @@
             }
             
             // Criar e baixar arquivo
-            const blob = new Blob([content], { type: mimeType });
+            const blob = new Blob(["\ufeff", content], { type: mimeType });
             const link = document.createElement('a');
             const url = URL.createObjectURL(blob);
             
@@ -6194,11 +6276,26 @@
             // Criar linhas CSV
             const rows = data.map(row => {
                 return headers.map(header => {
-                    const cell = row[header];
-                    // Escapar vírgulas e aspas
-                    if (typeof cell === 'string' && (cell.includes(',') || cell.includes('"'))) {
-                        return `"${cell.replace(/"/g, '""')}"`;
+                    let cell = row[header];
+                    
+                    // Converter arrays para string
+                    if (Array.isArray(cell)) {
+                        cell = cell.join(', ');
                     }
+                    
+                    // Converter objetos para string JSON
+                    if (typeof cell === 'object' && cell !== null && !Array.isArray(cell)) {
+                        cell = JSON.stringify(cell);
+                    }
+                    
+                    // Converter para string
+                    cell = cell === null || cell === undefined ? '' : String(cell);
+                    
+                    // Escapar vírgulas e aspas
+                    if (cell.includes(',') || cell.includes('"') || cell.includes('\n')) {
+                        cell = `"${cell.replace(/"/g, '""')}"`;
+                    }
+                    
                     return cell;
                 }).join(',');
             });
@@ -6238,7 +6335,7 @@
         }
         
         // ==============================================
-        // INICIALIZAÇÃO
+        // INICIALIZAÇÃO - CORRIGIDA
         // ==============================================
         
         document.addEventListener('DOMContentLoaded', function() {
@@ -6250,7 +6347,10 @@
             // Definir data atual
             const now = new Date();
             const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            document.getElementById('currentDate').textContent = now.toLocaleDateString('pt-MZ', options);
+            const dateElement = document.getElementById('currentDate');
+            if (dateElement) {
+                dateElement.textContent = now.toLocaleDateString('pt-MZ', options);
+            }
             
             // Adicionar estilos CSS para notificações se não existirem
             if (!document.querySelector('#notification-styles')) {
@@ -6368,61 +6468,37 @@
             });
             
             // Configurar botões principais
-            document.getElementById('novaVendaBtn')?.addEventListener('click', () => {
-                openModal('newSaleModal');
-            });
+            const setupButton = (id, handler) => {
+                const btn = document.getElementById(id);
+                if (btn) {
+                    btn.addEventListener('click', handler);
+                }
+            };
             
-            document.getElementById('novaVendaModalBtn')?.addEventListener('click', () => {
-                openModal('newSaleModal');
-            });
-            
-            document.getElementById('quickSaleDashboardBtn')?.addEventListener('click', () => {
-                openModal('newSaleModal');
-            });
-            
-            document.getElementById('quickSaleBtn')?.addEventListener('click', () => {
-                openModal('newSaleModal');
-            });
-            
-            document.getElementById('novoClienteBtn')?.addEventListener('click', () => {
-                openModal('addClientModal');
-            });
-            
-            document.getElementById('novoProdutoBtn')?.addEventListener('click', () => {
-                openModal('addProductModal');
-            });
-            
-            document.getElementById('notificationBtn')?.addEventListener('click', () => {
-                openModal('notificationsModal');
-            });
-            
-            document.getElementById('novaEntradaBtn')?.addEventListener('click', () => {
-                openModal('stockEntryModal');
-            });
-            
-            document.getElementById('novaSaidaBtn')?.addEventListener('click', () => {
-                openModal('stockOutputModal');
-            });
-            
-            document.getElementById('novoPlanoBtn')?.addEventListener('click', () => {
-                openModal('newPlanModal');
-            });
-            
-            document.getElementById('novaAssinaturaBtn')?.addEventListener('click', () => {
-                openModal('newSubscriptionModal');
-            });
-            
-            document.getElementById('novoFornecedorBtn')?.addEventListener('click', () => {
-                showNotification('Funcionalidade de novo fornecedor em desenvolvimento!', 'info');
-            });
-            
-            document.getElementById('novaEncomendaBtn')?.addEventListener('click', () => {
-                showNotification('Funcionalidade de nova encomenda em desenvolvimento!', 'info');
-            });
-            
-            document.getElementById('novoMembroBtn')?.addEventListener('click', () => {
-                showNotification('Funcionalidade de novo membro da equipa em desenvolvimento!', 'info');
-            });
+            setupButton('novaVendaBtn', () => openModal('newSaleModal'));
+            setupButton('novaVendaModalBtn', () => openModal('newSaleModal'));
+            setupButton('quickSaleDashboardBtn', () => openModal('newSaleModal'));
+            setupButton('quickSaleBtn', () => openModal('newSaleModal'));
+            setupButton('novoClienteBtn', () => openModal('addClientModal'));
+            setupButton('novoProdutoBtn', () => openModal('addProductModal'));
+            setupButton('notificationBtn', () => openModal('notificationsModal'));
+            setupButton('novaEntradaBtn', () => openModal('stockEntryModal'));
+            setupButton('novaSaidaBtn', () => openModal('stockOutputModal'));
+            setupButton('novoPlanoBtn', () => openModal('newPlanModal'));
+            setupButton('novaAssinaturaBtn', () => openModal('newSubscriptionModal'));
+            setupButton('novoFornecedorBtn', () => showNotification('Funcionalidade de novo fornecedor em desenvolvimento!', 'info'));
+            setupButton('novaEncomendaBtn', () => showNotification('Funcionalidade de nova encomenda em desenvolvimento!', 'info'));
+            setupButton('novoMembroBtn', () => showNotification('Funcionalidade de novo membro da equipa em desenvolvimento!', 'info'));
+            setupButton('downloadAppBtn', () => showNotification('A aplicação móvel está disponível nas lojas oficiais!', 'info'));
+            setupButton('helpCenterBtn', () => showNotification('Central de ajuda em desenvolvimento!', 'info'));
+            setupButton('liveSupportBtn', () => showNotification('Suporte ao vivo em desenvolvimento!', 'info'));
+            setupButton('contactSupportBtn', () => showNotification('Entre em contacto através do email: suporte@bizzflow.co.mz', 'info'));
+            setupButton('reporStockBtn', () => openModal('stockEntryModal'));
+            setupButton('inventarioBtn', () => showNotification('Funcionalidade de inventário em desenvolvimento!', 'info'));
+            setupButton('importarProdutosBtn', () => showNotification('Funcionalidade de importação em desenvolvimento!', 'info'));
+            setupButton('novoRecebimentoBtn', () => showNotification('Funcionalidade de novo recebimento em desenvolvimento!', 'info'));
+            setupButton('novoPagamentoBtn', () => showNotification('Funcionalidade de novo pagamento em desenvolvimento!', 'info'));
+            setupButton('loadMoreSalesBtn', () => showNotification('Carregando mais vendas...', 'info'));
             
             // Configurar formulário de adicionar cliente
             const addClientForm = document.getElementById('addClientForm');
@@ -6492,46 +6568,120 @@
                 });
             }
             
-            // Configurar botões de funcionalidade
-            document.getElementById('downloadAppBtn')?.addEventListener('click', () => {
-                showNotification('A aplicação móvel está disponível nas lojas oficiais!', 'info');
-            });
+            // Configurar busca de clientes
+            const searchClientInput = document.getElementById('searchClient');
+            if (searchClientInput) {
+                searchClientInput.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase();
+                    const clients = getClients();
+                    const clientsBody = document.getElementById('clientesBody');
+                    
+                    if (clientsBody && searchTerm) {
+                        clientsBody.innerHTML = '';
+                        
+                        const filteredClients = clients.filter(client => 
+                            client.name.toLowerCase().includes(searchTerm) ||
+                            client.phone.includes(searchTerm) ||
+                            (client.email && client.email.toLowerCase().includes(searchTerm))
+                        );
+                        
+                        filteredClients.forEach(client => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${client.id}</td>
+                                <td>${client.name}</td>
+                                <td>${client.phone}</td>
+                                <td>${client.email || '-'}</td>
+                                <td>
+                                    <span class="badge ${
+                                        client.type === 'vip' ? 'badge-warning' :
+                                        client.type === 'corporate' ? 'badge-primary' :
+                                        client.type === 'wholesale' ? 'badge-info' : 'badge-success'
+                                    }">
+                                        ${client.type === 'vip' ? 'VIP' :
+                                          client.type === 'corporate' ? 'Corporativo' :
+                                          client.type === 'wholesale' ? 'Atacado' : 'Regular'}
+                                    </span>
+                                </td>
+                                <td>MZN ${client.total_purchases.toFixed(2)}</td>
+                                <td>${client.last_purchase || '-'}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary" onclick="editClient(${client.id})">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-info" onclick="viewClient(${client.id})">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteClient(${client.id})">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            `;
+                            clientsBody.appendChild(row);
+                        });
+                        
+                        document.getElementById('clientCount').textContent = filteredClients.length;
+                    } else if (clientsBody) {
+                        // Se a busca estiver vazia, recarregar todos os clientes
+                        updateClientsTable();
+                    }
+                });
+            }
             
-            document.getElementById('helpCenterBtn')?.addEventListener('click', () => {
-                showNotification('Central de ajuda em desenvolvimento!', 'info');
-            });
-            
-            document.getElementById('liveSupportBtn')?.addEventListener('click', () => {
-                showNotification('Suporte ao vivo em desenvolvimento!', 'info');
-            });
-            
-            document.getElementById('contactSupportBtn')?.addEventListener('click', () => {
-                showNotification('Entre em contacto através do email: suporte@bizzflow.co.mz', 'info');
-            });
-            
-            document.getElementById('reporStockBtn')?.addEventListener('click', () => {
-                openModal('stockEntryModal');
-            });
-            
-            document.getElementById('inventarioBtn')?.addEventListener('click', () => {
-                showNotification('Funcionalidade de inventário em desenvolvimento!', 'info');
-            });
-            
-            document.getElementById('importarProdutosBtn')?.addEventListener('click', () => {
-                showNotification('Funcionalidade de importação em desenvolvimento!', 'info');
-            });
-            
-            document.getElementById('novoRecebimentoBtn')?.addEventListener('click', () => {
-                showNotification('Funcionalidade de novo recebimento em desenvolvimento!', 'info');
-            });
-            
-            document.getElementById('novoPagamentoBtn')?.addEventListener('click', () => {
-                showNotification('Funcionalidade de novo pagamento em desenvolvimento!', 'info');
-            });
-            
-            document.getElementById('loadMoreSalesBtn')?.addEventListener('click', () => {
-                showNotification('Carregando mais vendas...', 'info');
-            });
+            // Configurar busca de produtos
+            const searchProductInput = document.getElementById('searchProduct');
+            if (searchProductInput) {
+                searchProductInput.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase();
+                    const products = getProducts();
+                    const productsBody = document.getElementById('produtosBody');
+                    
+                    if (productsBody && searchTerm) {
+                        productsBody.innerHTML = '';
+                        
+                        const filteredProducts = products.filter(product => 
+                            product.name.toLowerCase().includes(searchTerm) ||
+                            product.code.toLowerCase().includes(searchTerm) ||
+                            product.category.toLowerCase().includes(searchTerm)
+                        );
+                        
+                        filteredProducts.forEach(product => {
+                            const status = product.stock === 0 ? 'badge-danger' :
+                                          product.stock <= product.min_stock ? 'badge-warning' : 'badge-success';
+                            const statusText = product.stock === 0 ? 'Esgotado' :
+                                              product.stock <= product.min_stock ? 'Stock Baixo' : 'Em Stock';
+                            
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${product.code}</td>
+                                <td>${product.name}</td>
+                                <td>${product.category}</td>
+                                <td>MZN ${product.price.toFixed(2)}</td>
+                                <td>${product.cost ? 'MZN ' + product.cost.toFixed(2) : '-'}</td>
+                                <td>${product.stock}</td>
+                                <td><span class="badge ${status}">${statusText}</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary" onclick="editProduct(${product.id})">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-info" onclick="viewProduct(${product.id})">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteProduct(${product.id})">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            `;
+                            productsBody.appendChild(row);
+                        });
+                        
+                        document.getElementById('productCount').textContent = filteredProducts.length;
+                    } else if (productsBody) {
+                        // Se a busca estiver vazia, recarregar todos os produtos
+                        updateProductsTable();
+                    }
+                });
+            }
             
             console.log('✅ Aplicação inicializada com sucesso!');
         });
