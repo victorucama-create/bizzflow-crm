@@ -1051,38 +1051,6 @@
             color: #0c5460;
         }
 
-        /* Dark Mode Support */
-        @media (prefers-color-scheme: dark) {
-            body {
-                background-color: #121212;
-                color: #e0e0e0;
-            }
-            
-            .content-box, .stat-card, .feature-card, .topbar, .modal-content, .login-box {
-                background-color: #1e1e1e;
-                color: #e0e0e0;
-                border-color: #333;
-            }
-            
-            .form-control {
-                background-color: #2d2d2d;
-                border-color: #444;
-                color: #e0e0e0;
-            }
-            
-            th, td {
-                border-color: #333;
-            }
-            
-            th {
-                background-color: #252525;
-            }
-            
-            tr:hover {
-                background-color: #252525;
-            }
-        }
-
         /* Loading Spinner */
         .spinner {
             width: 40px;
@@ -1096,34 +1064,6 @@
 
         @keyframes spin {
             to { transform: rotate(360deg); }
-        }
-
-        /* Dashboard específico para investidores */
-        .investor-dashboard {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            color: white;
-        }
-
-        .investor-card {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 25px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        /* Dashboard específico para clientes */
-        .customer-dashboard {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        }
-
-        .customer-card {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 25px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
         }
 
         /* Estilos para planos e assinaturas */
@@ -1615,7 +1555,7 @@
                         <i class="fas fa-bolt"></i>
                         <h3>Venda Rápida</h3>
                         <p>Realize vendas de forma rápida e eficiente com o nosso sistema de checkout otimizado.</p>
-                        <button class="btn btn-primary btn-sm" style="margin-top: 15px;">
+                        <button class="btn btn-primary btn-sm" style="margin-top: 15px;" id="quickSaleDashboardBtn">
                             <i class="fas fa-play"></i> Iniciar Venda
                         </button>
                     </div>
@@ -1623,7 +1563,7 @@
                         <i class="fas fa-chart-pie"></i>
                         <h3>Análise de Dados</h3>
                         <p>Obtenha insights valiosos sobre o seu negócio com relatórios detalhados e personalizáveis.</p>
-                        <button class="btn btn-primary btn-sm" style="margin-top: 15px;">
+                        <button class="btn btn-primary btn-sm" style="margin-top: 15px;" onclick="showPage('relatorios')">
                             <i class="fas fa-chart-bar"></i> Ver Relatórios
                         </button>
                     </div>
@@ -1631,7 +1571,7 @@
                         <i class="fas fa-mobile-alt"></i>
                         <h3>App Móvel</h3>
                         <p>Aceda ao Bizz Flow em qualquer lugar com a nossa aplicação móvel disponível para iOS e Android.</p>
-                        <button class="btn btn-primary btn-sm" style="margin-top: 15px;">
+                        <button class="btn btn-primary btn-sm" style="margin-top: 15px;" id="downloadAppBtn">
                             <i class="fas fa-download"></i> Baixar App
                         </button>
                     </div>
@@ -1668,7 +1608,7 @@
                         </table>
                     </div>
                     <div style="text-align: center; margin-top: 20px;">
-                        <button class="btn btn-outline">
+                        <button class="btn btn-outline" id="loadMoreSalesBtn">
                             <i class="fas fa-sync-alt"></i> Carregar Mais Vendas
                         </button>
                     </div>
@@ -1733,7 +1673,7 @@
                     <div class="content-header">
                         <h2><i class="fas fa-users"></i> Gestão de Clientes</h2>
                         <div>
-                            <input type="text" class="form-control" placeholder="Buscar cliente..." style="width: 250px; display: inline-block; margin-right: 10px;">
+                            <input type="text" id="searchClient" class="form-control" placeholder="Buscar cliente..." style="width: 250px; display: inline-block; margin-right: 10px;">
                             <button class="btn btn-primary" id="novoClienteBtn">
                                 <i class="fas fa-plus"></i> Novo Cliente
                             </button>
@@ -1832,7 +1772,7 @@
                     <div class="content-header">
                         <h2><i class="fas fa-boxes"></i> Gestão de Produtos</h2>
                         <div>
-                            <input type="text" class="form-control" placeholder="Buscar produto..." style="width: 250px; display: inline-block; margin-right: 10px;">
+                            <input type="text" id="searchProduct" class="form-control" placeholder="Buscar produto..." style="width: 250px; display: inline-block; margin-right: 10px;">
                             <button class="btn btn-primary" id="novoProdutoBtn">
                                 <i class="fas fa-plus"></i> Novo Produto
                             </button>
@@ -1934,7 +1874,7 @@
                     <div class="content-header">
                         <h2><i class="fas fa-shopping-cart"></i> Gestão de Vendas</h2>
                         <div>
-                            <input type="text" class="form-control" placeholder="Buscar venda..." style="width: 250px; display: inline-block; margin-right: 10px;">
+                            <input type="text" id="searchSale" class="form-control" placeholder="Buscar venda..." style="width: 250px; display: inline-block; margin-right: 10px;">
                             <button class="btn btn-primary" id="novaVendaModalBtn">
                                 <i class="fas fa-plus"></i> Nova Venda
                             </button>
@@ -2033,10 +1973,10 @@
                     <div class="content-header">
                         <h2><i class="fas fa-money-bill-wave"></i> Gestão Financeira</h2>
                         <div>
-                            <button class="btn btn-success btn-sm">
+                            <button class="btn btn-success btn-sm" id="novoRecebimentoBtn">
                                 <i class="fas fa-plus"></i> Novo Recebimento
                             </button>
-                            <button class="btn btn-danger btn-sm" style="margin-left: 10px;">
+                            <button class="btn btn-danger btn-sm" style="margin-left: 10px;" id="novoPagamentoBtn">
                                 <i class="fas fa-minus"></i> Novo Pagamento
                             </button>
                         </div>
@@ -2375,13 +2315,13 @@
                             
                             <div style="background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
                                 <h4 style="color: var(--bizzflow-primary); margin-bottom: 10px;">Relatórios Disponíveis</h4>
-                                <button class="btn btn-outline btn-sm" style="width: 100%; margin-bottom: 10px;">
+                                <button class="btn btn-outline btn-sm" style="width: 100%; margin-bottom: 10px;" onclick="downloadReport('financial')">
                                     <i class="fas fa-file-pdf"></i> Relatório Financeiro Detalhado
                                 </button>
-                                <button class="btn btn-outline btn-sm" style="width: 100%; margin-bottom: 10px;">
+                                <button class="btn btn-outline btn-sm" style="width: 100%; margin-bottom: 10px;" onclick="downloadReport('growth')">
                                     <i class="fas fa-file-excel"></i> Projeções de Crescimento
                                 </button>
-                                <button class="btn btn-outline btn-sm" style="width: 100%;">
+                                <button class="btn btn-outline btn-sm" style="width: 100%;" onclick="downloadReport('market')">
                                     <i class="fas fa-file-alt"></i> Análise de Mercado
                                 </button>
                             </div>
@@ -3233,7 +3173,7 @@
                             <i class="fas fa-question-circle"></i>
                             <h3>Central de Ajuda</h3>
                             <p>Aceda à nossa base de conhecimento com tutoriais, FAQs e guias passo-a-passo.</p>
-                            <button class="btn btn-primary btn-sm" style="margin-top: 15px;">
+                            <button class="btn btn-primary btn-sm" style="margin-top: 15px;" id="helpCenterBtn">
                                 <i class="fas fa-book-open"></i> Aceder Central
                             </button>
                         </div>
@@ -3241,7 +3181,7 @@
                             <i class="fas fa-comments"></i>
                             <h3>Suporte ao Vivo</h3>
                             <p>Converse em tempo real com a nossa equipa de suporte técnico especializado.</p>
-                            <button class="btn btn-primary btn-sm" style="margin-top: 15px;">
+                            <button class="btn btn-primary btn-sm" style="margin-top: 15px;" id="liveSupportBtn">
                                 <i class="fas fa-comment-dots"></i> Iniciar Chat
                             </button>
                         </div>
@@ -3249,7 +3189,7 @@
                             <i class="fas fa-phone-alt"></i>
                             <h3>Contactos</h3>
                             <p>Ligue para nós ou envie um email. Estamos disponíveis 24/7 para ajudar.</p>
-                            <button class="btn btn-primary btn-sm" style="margin-top: 15px;">
+                            <button class="btn btn-primary btn-sm" style="margin-top: 15px;" id="contactSupportBtn">
                                 <i class="fas fa-phone"></i> Contactar
                             </button>
                         </div>
@@ -3857,6 +3797,8 @@
         window.categoryChartInstance = null;
         window.reportSalesChartInstance = null;
         window.reportProductsChartInstance = null;
+        window.cashflowChartInstance = null;
+        window.investmentChartInstance = null;
         
         // ==============================================
         // FUNÇÕES DE DADOS (LOCALSTORAGE)
@@ -4428,7 +4370,138 @@
         }
         
         // ==============================================
-        // FUNÇÕES DE GRÁFICOS (CORRIGIDAS)
+        // FUNÇÕES DE NAVEGAÇÃO
+        // ==============================================
+        
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        function showPage(pageId) {
+            // Esconder todas as páginas
+            document.querySelectorAll('.page-content').forEach(page => {
+                page.style.display = 'none';
+            });
+            
+            // Mostrar a página selecionada
+            const pageElement = document.getElementById(pageId + 'Page');
+            if (pageElement) {
+                pageElement.style.display = 'block';
+                
+                // Atualizar título da página
+                const menuItem = document.querySelector(`[data-page="${pageId}"]`);
+                if (menuItem) {
+                    const pageTitle = menuItem.querySelector('span').textContent;
+                    document.getElementById('pageTitle').textContent = pageTitle;
+                    
+                    // Atualizar subtítulo baseado na página
+                    let subtitle = '';
+                    switch(pageId) {
+                        case 'dashboard': subtitle = 'Visão geral do seu negócio em tempo real'; break;
+                        case 'clientes': subtitle = 'Gerencie sua base de clientes'; break;
+                        case 'produtos': subtitle = 'Controle de inventário e produtos'; break;
+                        case 'vendas': subtitle = 'Histórico e novas vendas'; break;
+                        case 'financeiro': subtitle = 'Controle financeiro completo'; break;
+                        case 'relatorios': subtitle = 'Análises e relatórios detalhados'; break;
+                        case 'investimentos': subtitle = 'Dashboard do investidor'; break;
+                        case 'planos': subtitle = 'Planos de assinatura disponíveis'; break;
+                        case 'assinaturas': subtitle = 'Gestão de assinaturas ativas'; break;
+                        case 'exportar': subtitle = 'Importar e exportar dados'; break;
+                        case 'stock': subtitle = 'Gestão de stock e inventário'; break;
+                        case 'fornecedores': subtitle = 'Gestão de fornecedores'; break;
+                        case 'encomendas': subtitle = 'Controlo de encomendas'; break;
+                        case 'equipa': subtitle = 'Gestão da equipa de trabalho'; break;
+                        case 'configuracoes': subtitle = 'Configurações do sistema'; break;
+                        case 'suporte': subtitle = 'Central de ajuda e suporte'; break;
+                        default: subtitle = 'Página do sistema';
+                    }
+                    document.getElementById('pageSubtitle').textContent = subtitle;
+                    
+                    // Atualizar item ativo no menu
+                    document.querySelectorAll('.menu-item').forEach(item => {
+                        item.classList.remove('active');
+                    });
+                    menuItem.classList.add('active');
+                    
+                    // Atualizar dados da página específica
+                    updatePageData(pageId);
+                }
+            } else {
+                console.error(`Página ${pageId} não encontrada`);
+            }
+        }
+        
+        function updatePageData(pageId) {
+            switch(pageId) {
+                case 'dashboard':
+                    updateDashboard();
+                    break;
+                case 'clientes':
+                    updateClientsTable();
+                    break;
+                case 'produtos':
+                    updateProductsTable();
+                    break;
+                case 'vendas':
+                    updateSalesTable();
+                    break;
+                case 'financeiro':
+                    updateFinancialData();
+                    break;
+                case 'relatorios':
+                    updateReportsData();
+                    break;
+                case 'investimentos':
+                    updateInvestmentsData();
+                    break;
+                case 'planos':
+                    updatePlansData();
+                    break;
+                case 'assinaturas':
+                    updateSubscriptionsTable();
+                    break;
+                case 'exportar':
+                    // Nada a fazer por enquanto
+                    break;
+                case 'stock':
+                    updateStockData();
+                    break;
+                case 'fornecedores':
+                    updateSuppliersTable();
+                    break;
+                case 'encomendas':
+                    updateOrdersTable();
+                    break;
+                case 'equipa':
+                    updateTeamTable();
+                    break;
+                case 'configuracoes':
+                    // Carregar configurações nos formulários
+                    loadSettings();
+                    break;
+            }
+        }
+        
+        function switchLoginTab(tabId) {
+            // Atualizar tabs
+            document.querySelectorAll('[data-tab]').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+            
+            // Atualizar conteúdo
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tabId + 'Tab').classList.add('active');
+        }
+        
+        // ==============================================
+        // FUNÇÕES DE GRÁFICOS
         // ==============================================
         
         function updateCharts() {
@@ -4472,7 +4545,10 @@
                     window.salesChartInstance = new Chart(salesChartCtx.getContext('2d'), {
                         type: 'line',
                         data: {
-                            labels: last7Days.map(d => d.split('-')[2] + '/' + d.split('-')[1]),
+                            labels: last7Days.map(d => {
+                                const date = new Date(d);
+                                return date.toLocaleDateString('pt-MZ', { day: '2-digit', month: '2-digit' });
+                            }),
                             datasets: [{
                                 label: 'Vendas (MZN)',
                                 data: Object.values(salesByDay),
@@ -4495,6 +4571,11 @@
                                     beginAtZero: true,
                                     grid: {
                                         color: 'rgba(0, 0, 0, 0.05)'
+                                    },
+                                    ticks: {
+                                        callback: function(value) {
+                                            return value.toFixed(2) + ' MZN';
+                                        }
                                     }
                                 },
                                 x: {
@@ -4557,8 +4638,10 @@
             }
         }
         
-        function updateReportCharts(salesData, subscriptionsData) {
+        function updateReportCharts() {
             console.log('📊 Atualizando gráficos de relatórios...');
+            
+            const sales = getSales();
             
             if (typeof Chart === 'undefined') {
                 console.warn('Chart.js não disponível');
@@ -4566,13 +4649,22 @@
             }
             
             try {
-                // Gráfico de vendas por dia
+                // Gráfico de vendas por dia para relatórios
                 const salesByDay = {};
-                salesData.forEach(sale => {
-                    if (!salesByDay[sale.date]) {
-                        salesByDay[sale.date] = 0;
+                const last30Days = [...Array(30)].map((_, i) => {
+                    const d = new Date();
+                    d.setDate(d.getDate() - i);
+                    return d.toISOString().split('T')[0];
+                }).reverse();
+                
+                last30Days.forEach(day => {
+                    salesByDay[day] = 0;
+                });
+                
+                sales.forEach(sale => {
+                    if (salesByDay[sale.date] !== undefined) {
+                        salesByDay[sale.date] += sale.total;
                     }
-                    salesByDay[sale.date] += sale.total;
                 });
                 
                 const reportSalesChartCtx = document.getElementById('reportSalesChart');
@@ -4582,14 +4674,18 @@
                         window.reportSalesChartInstance.destroy();
                     }
                     
-                    const sortedDates = Object.keys(salesByDay).sort();
+                    const labels = last30Days.map(d => {
+                        const date = new Date(d);
+                        return date.toLocaleDateString('pt-MZ', { day: '2-digit', month: '2-digit' });
+                    });
+                    
                     window.reportSalesChartInstance = new Chart(reportSalesChartCtx.getContext('2d'), {
                         type: 'bar',
                         data: {
-                            labels: sortedDates.map(d => d.split('-')[2] + '/' + d.split('-')[1]),
+                            labels: labels,
                             datasets: [{
                                 label: 'Vendas (MZN)',
-                                data: sortedDates.map(d => salesByDay[d]),
+                                data: Object.values(salesByDay),
                                 backgroundColor: '#3498db',
                                 borderColor: '#2980b9',
                                 borderWidth: 1
@@ -4601,53 +4697,15 @@
                                 legend: {
                                     display: false
                                 }
-                            }
-                        }
-                    });
-                }
-                
-                // Gráfico de top produtos
-                const productQuantities = {};
-                salesData.forEach(sale => {
-                    sale.items.forEach(item => {
-                        if (!productQuantities[item.name]) {
-                            productQuantities[item.name] = 0;
-                        }
-                        productQuantities[item.name] += item.quantity;
-                    });
-                });
-                
-                const topProducts = Object.entries(productQuantities)
-                    .sort((a, b) => b[1] - a[1])
-                    .slice(0, 5);
-                
-                const reportProductsChartCtx = document.getElementById('reportProductsChart');
-                if (reportProductsChartCtx) {
-                    // Destruir gráfico existente
-                    if (window.reportProductsChartInstance) {
-                        window.reportProductsChartInstance.destroy();
-                    }
-                    
-                    window.reportProductsChartInstance = new Chart(reportProductsChartCtx.getContext('2d'), {
-                        type: 'pie',
-                        data: {
-                            labels: topProducts.map(p => p[0]),
-                            datasets: [{
-                                data: topProducts.map(p => p[1]),
-                                backgroundColor: [
-                                    '#3498db',
-                                    '#2ecc71',
-                                    '#f39c12',
-                                    '#e74c3c',
-                                    '#9b59b6'
-                                ]
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            plugins: {
-                                legend: {
-                                    position: 'bottom'
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return value.toFixed(2) + ' MZN';
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -4660,8 +4718,144 @@
             }
         }
         
+        function updateFinancialCharts() {
+            console.log('💰 Atualizando gráficos financeiros...');
+            
+            const financial = getFinancial();
+            
+            if (typeof Chart === 'undefined') {
+                console.warn('Chart.js não disponível');
+                return;
+            }
+            
+            try {
+                const cashflowChartCtx = document.getElementById('cashflowChart');
+                if (cashflowChartCtx) {
+                    // Destruir gráfico existente
+                    if (window.cashflowChartInstance) {
+                        window.cashflowChartInstance.destroy();
+                    }
+                    
+                    // Dados de exemplo para fluxo de caixa
+                    const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'];
+                    const income = [45000, 52000, 48000, 61000, 55000, 59000];
+                    const expenses = [22000, 25000, 23000, 28000, 26000, 27000];
+                    
+                    window.cashflowChartInstance = new Chart(cashflowChartCtx.getContext('2d'), {
+                        type: 'line',
+                        data: {
+                            labels: months,
+                            datasets: [
+                                {
+                                    label: 'Receitas',
+                                    data: income,
+                                    borderColor: '#2ecc71',
+                                    backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                                    borderWidth: 3,
+                                    fill: true
+                                },
+                                {
+                                    label: 'Despesas',
+                                    data: expenses,
+                                    borderColor: '#e74c3c',
+                                    backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                                    borderWidth: 3,
+                                    fill: true
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    position: 'top'
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return value.toLocaleString('pt-MZ') + ' MZN';
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+                
+                console.log('✅ Gráficos financeiros atualizados');
+            } catch (error) {
+                console.error('❌ Erro ao atualizar gráficos financeiros:', error);
+            }
+        }
+        
+        function updateInvestmentChart() {
+            console.log('📊 Atualizando gráfico de investimentos...');
+            
+            const investments = getInvestments();
+            
+            if (typeof Chart === 'undefined') {
+                console.warn('Chart.js não disponível');
+                return;
+            }
+            
+            try {
+                const investmentChartCtx = document.getElementById('investmentChart');
+                if (investmentChartCtx) {
+                    // Destruir gráfico existente
+                    if (window.investmentChartInstance) {
+                        window.investmentChartInstance.destroy();
+                    }
+                    
+                    // Dados de exemplo para performance de investimento
+                    const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'];
+                    const values = [100000, 105000, 112000, 118000, 125000, 132000];
+                    
+                    window.investmentChartInstance = new Chart(investmentChartCtx.getContext('2d'), {
+                        type: 'line',
+                        data: {
+                            labels: months,
+                            datasets: [{
+                                label: 'Valor do Investimento',
+                                data: values,
+                                borderColor: '#9b59b6',
+                                backgroundColor: 'rgba(155, 89, 182, 0.1)',
+                                borderWidth: 3,
+                                tension: 0.4,
+                                fill: true
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    position: 'top'
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: false,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return value.toLocaleString('pt-MZ') + ' MZN';
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+                
+                console.log('✅ Gráfico de investimentos atualizado');
+            } catch (error) {
+                console.error('❌ Erro ao atualizar gráfico de investimentos:', error);
+            }
+        }
+        
         // ==============================================
-        // FUNÇÕES PRINCIPAIS (CORRIGIDAS)
+        // FUNÇÕES PRINCIPAIS
         // ==============================================
         
         function updateDashboard() {
@@ -4684,19 +4878,19 @@
                 document.getElementById('vendasHoje').textContent = todaySales.length;
                 
                 const totalSales = sales.reduce((sum, s) => sum + s.total, 0);
-                document.getElementById('totalVendas').textContent = totalSales.toFixed(2) + ' MZN';
+                document.getElementById('totalVendas').textContent = totalSales.toLocaleString('pt-MZ', { minimumFractionDigits: 2 }) + ' MZN';
                 
                 // Atualizar estatísticas financeiras
-                document.getElementById('currentBalance').textContent = financial.current_balance.toFixed(2) + ' MZN';
-                document.getElementById('monthlyIncome').textContent = financial.monthly_income.toFixed(2) + ' MZN';
-                document.getElementById('monthlyExpenses').textContent = financial.monthly_expenses.toFixed(2) + ' MZN';
-                document.getElementById('monthlyProfit').textContent = financial.monthly_profit.toFixed(2) + ' MZN';
+                document.getElementById('currentBalance').textContent = financial.current_balance.toLocaleString('pt-MZ', { minimumFractionDigits: 2 }) + ' MZN';
+                document.getElementById('monthlyIncome').textContent = financial.monthly_income.toLocaleString('pt-MZ', { minimumFractionDigits: 2 }) + ' MZN';
+                document.getElementById('monthlyExpenses').textContent = financial.monthly_expenses.toLocaleString('pt-MZ', { minimumFractionDigits: 2 }) + ' MZN';
+                document.getElementById('monthlyProfit').textContent = financial.monthly_profit.toLocaleString('pt-MZ', { minimumFractionDigits: 2 }) + ' MZN';
                 
                 // Atualizar estatísticas de investimentos
-                document.getElementById('roiPercentage').textContent = investments.roi_percentage + '%';
-                document.getElementById('growthRate').textContent = investments.growth_rate + '%';
-                document.getElementById('totalInvestment').textContent = investments.total_invested.toFixed(2) + ' MZN';
-                document.getElementById('profitMargin').textContent = investments.profit_margin + '%';
+                document.getElementById('roiPercentage').textContent = investments.roi_percentage.toFixed(1) + '%';
+                document.getElementById('growthRate').textContent = investments.growth_rate.toFixed(1) + '%';
+                document.getElementById('totalInvestment').textContent = investments.total_invested.toLocaleString('pt-MZ', { minimumFractionDigits: 2 }) + ' MZN';
+                document.getElementById('profitMargin').textContent = investments.profit_margin.toFixed(1) + '%';
                 
                 // Atualizar tabela de vendas recentes
                 const recentSalesBody = document.getElementById('recentSalesBody');
@@ -4751,9 +4945,6 @@
                     });
                 }
                 
-                // Atualizar gráficos
-                setTimeout(updateCharts, 100);
-                
                 // Atualizar estatísticas de assinaturas no dashboard
                 const activeSubscriptions = subscriptions.filter(s => s.status === 'active');
                 if (document.getElementById('totalAssinaturas')) {
@@ -4769,14 +4960,1283 @@
                     document.getElementById('receitaMensal').textContent = monthlyRevenue.toFixed(2) + ' MZN';
                 }
                 
+                // Atualizar gráficos
+                setTimeout(updateCharts, 100);
+                
                 console.log('✅ Dashboard atualizado');
             } catch (error) {
                 console.error('❌ Erro ao atualizar dashboard:', error);
             }
         }
         
-        // ... (continuar com as outras funções como updateClientsTable, updateProductsTable, etc.)
-
+        function updateClientsTable() {
+            console.log('👥 Atualizando tabela de clientes...');
+            
+            try {
+                const clients = getClients();
+                const clientsBody = document.getElementById('clientesBody');
+                
+                if (clientsBody) {
+                    clientsBody.innerHTML = '';
+                    
+                    clients.forEach(client => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${client.id}</td>
+                            <td>${client.name}</td>
+                            <td>${client.phone}</td>
+                            <td>${client.email || '-'}</td>
+                            <td>
+                                <span class="badge ${
+                                    client.type === 'vip' ? 'badge-warning' :
+                                    client.type === 'corporate' ? 'badge-primary' :
+                                    client.type === 'wholesale' ? 'badge-info' : 'badge-success'
+                                }">
+                                    ${client.type === 'vip' ? 'VIP' :
+                                      client.type === 'corporate' ? 'Corporativo' :
+                                      client.type === 'wholesale' ? 'Atacado' : 'Regular'}
+                                </span>
+                            </td>
+                            <td>${client.total_purchases.toFixed(2)} MZN</td>
+                            <td>${client.last_purchase || '-'}</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" onclick="editClient(${client.id})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-info" onclick="viewClient(${client.id})">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteClient(${client.id})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        `;
+                        clientsBody.appendChild(row);
+                    });
+                    
+                    // Atualizar contadores
+                    document.getElementById('clientCount').textContent = clients.length;
+                    document.getElementById('totalClients').textContent = clients.length;
+                    
+                    // Atualizar estatísticas
+                    const vipClients = clients.filter(c => c.type === 'vip').length;
+                    const activeClients = clients.filter(c => {
+                        const lastPurchase = c.last_purchase ? new Date(c.last_purchase) : null;
+                        if (!lastPurchase) return false;
+                        const thirtyDaysAgo = new Date();
+                        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                        return lastPurchase >= thirtyDaysAgo;
+                    }).length;
+                    
+                    document.getElementById('totalClientesCount').textContent = clients.length;
+                    document.getElementById('vipClientesCount').textContent = vipClients;
+                    document.getElementById('clientesAtivosCount').textContent = activeClients;
+                    document.getElementById('clientesInativosCount').textContent = clients.length - activeClients;
+                }
+                
+                console.log('✅ Tabela de clientes atualizada');
+            } catch (error) {
+                console.error('❌ Erro ao atualizar tabela de clientes:', error);
+            }
+        }
+        
+        function updateProductsTable() {
+            console.log('📦 Atualizando tabela de produtos...');
+            
+            try {
+                const products = getProducts();
+                const productsBody = document.getElementById('produtosBody');
+                
+                if (productsBody) {
+                    productsBody.innerHTML = '';
+                    
+                    products.forEach(product => {
+                        const status = product.stock === 0 ? 'badge-danger' :
+                                      product.stock <= product.min_stock ? 'badge-warning' : 'badge-success';
+                        const statusText = product.stock === 0 ? 'Esgotado' :
+                                          product.stock <= product.min_stock ? 'Stock Baixo' : 'Em Stock';
+                        
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${product.code}</td>
+                            <td>${product.name}</td>
+                            <td>${product.category}</td>
+                            <td>${product.price.toFixed(2)} MZN</td>
+                            <td>${product.cost ? product.cost.toFixed(2) + ' MZN' : '-'}</td>
+                            <td>${product.stock}</td>
+                            <td><span class="badge ${status}">${statusText}</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" onclick="editProduct(${product.id})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-info" onclick="viewProduct(${product.id})">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteProduct(${product.id})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        `;
+                        productsBody.appendChild(row);
+                    });
+                    
+                    // Atualizar contadores
+                    document.getElementById('productCount').textContent = products.length;
+                    
+                    // Atualizar estatísticas
+                    const lowStockProducts = products.filter(p => p.stock <= p.min_stock && p.stock > 0).length;
+                    const outOfStockProducts = products.filter(p => p.stock === 0).length;
+                    const categories = [...new Set(products.map(p => p.category))];
+                    
+                    document.getElementById('totalProdutosCount').textContent = products.reduce((sum, p) => sum + p.stock, 0);
+                    document.getElementById('produtosStockBaixo').textContent = lowStockProducts;
+                    document.getElementById('produtosEsgotados').textContent = outOfStockProducts;
+                    document.getElementById('totalCategorias').textContent = categories.length;
+                }
+                
+                console.log('✅ Tabela de produtos atualizada');
+            } catch (error) {
+                console.error('❌ Erro ao atualizar tabela de produtos:', error);
+            }
+        }
+        
+        function updateSalesTable() {
+            console.log('🛒 Atualizando tabela de vendas...');
+            
+            try {
+                const sales = getSales();
+                const salesBody = document.getElementById('vendasBody');
+                
+                if (salesBody) {
+                    salesBody.innerHTML = '';
+                    
+                    sales.slice().reverse().forEach(sale => {
+                        const itemCount = sale.items.reduce((sum, item) => sum + item.quantity, 0);
+                        
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${sale.receipt_no}</td>
+                            <td>${sale.client_name || 'Cliente Avulso'}</td>
+                            <td>${sale.date} ${sale.time || ''}</td>
+                            <td>${itemCount} itens</td>
+                            <td>${sale.total.toFixed(2)} MZN</td>
+                            <td>${sale.payment_method}</td>
+                            <td><span class="badge badge-success">Concluída</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" onclick="viewSale(${sale.id})">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteSale(${sale.id})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        `;
+                        salesBody.appendChild(row);
+                    });
+                    
+                    // Atualizar contadores
+                    document.getElementById('saleCount').textContent = sales.length;
+                    
+                    // Atualizar estatísticas
+                    const today = new Date().toISOString().split('T')[0];
+                    const todaySales = sales.filter(s => s.date === today);
+                    const thisWeekSales = sales.filter(s => {
+                        const saleDate = new Date(s.date);
+                        const today = new Date();
+                        const startOfWeek = new Date(today);
+                        startOfWeek.setDate(today.getDate() - today.getDay());
+                        return saleDate >= startOfWeek;
+                    });
+                    const thisMonthSales = sales.filter(s => {
+                        const saleDate = new Date(s.date);
+                        const today = new Date();
+                        return saleDate.getMonth() === today.getMonth() && 
+                               saleDate.getFullYear() === today.getFullYear();
+                    });
+                    const monthlyRevenue = thisMonthSales.reduce((sum, s) => sum + s.total, 0);
+                    
+                    document.getElementById('vendasHojeCount').textContent = todaySales.length;
+                    document.getElementById('vendasSemanaCount').textContent = thisWeekSales.length;
+                    document.getElementById('vendasMesCount').textContent = thisMonthSales.length;
+                    document.getElementById('faturamentoMes').textContent = monthlyRevenue.toLocaleString('pt-MZ', { minimumFractionDigits: 2 }) + ' MZN';
+                }
+                
+                console.log('✅ Tabela de vendas atualizada');
+            } catch (error) {
+                console.error('❌ Erro ao atualizar tabela de vendas:', error);
+            }
+        }
+        
+        function updateFinancialData() {
+            console.log('💰 Atualizando dados financeiros...');
+            
+            try {
+                const financial = getFinancial();
+                
+                // Atualizar dados financeiros básicos
+                document.getElementById('currentBalance').textContent = financial.current_balance.toLocaleString('pt-MZ', { minimumFractionDigits: 2 }) + ' MZN';
+                document.getElementById('monthlyIncome').textContent = financial.monthly_income.toLocaleString('pt-MZ', { minimumFractionDigits: 2 }) + ' MZN';
+                document.getElementById('monthlyExpenses').textContent = financial.monthly_expenses.toLocaleString('pt-MZ', { minimumFractionDigits: 2 }) + ' MZN';
+                document.getElementById('monthlyProfit').textContent = financial.monthly_profit.toLocaleString('pt-MZ', { minimumFractionDigits: 2 }) + ' MZN';
+                
+                // Atualizar gráficos financeiros
+                setTimeout(updateFinancialCharts, 100);
+                
+                console.log('✅ Dados financeiros atualizados');
+            } catch (error) {
+                console.error('❌ Erro ao atualizar dados financeiros:', error);
+            }
+        }
+        
+        function updateReportsData() {
+            console.log('📊 Atualizando relatórios...');
+            
+            try {
+                const sales = getSales();
+                const products = getProducts();
+                const clients = getClients();
+                const subscriptions = getSubscriptions();
+                
+                // Atualizar estatísticas de relatórios
+                const totalSalesValue = sales.reduce((sum, s) => sum + s.total, 0);
+                const totalItemsSold = sales.reduce((sum, s) => 
+                    sum + s.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0);
+                const avgSale = sales.length > 0 ? totalSalesValue / sales.length : 0;
+                
+                // Encontrar produto mais vendido
+                const productSales = {};
+                sales.forEach(sale => {
+                    sale.items.forEach(item => {
+                        if (!productSales[item.name]) {
+                            productSales[item.name] = 0;
+                        }
+                        productSales[item.name] += item.quantity;
+                    });
+                });
+                
+                let topProduct = '-';
+                let maxSales = 0;
+                Object.entries(productSales).forEach(([product, quantity]) => {
+                    if (quantity > maxSales) {
+                        maxSales = quantity;
+                        topProduct = product;
+                    }
+                });
+                
+                document.getElementById('reportTotalSales').textContent = totalSalesValue.toLocaleString('pt-MZ', { minimumFractionDigits: 2 }) + ' MZN';
+                document.getElementById('reportTotalItems').textContent = totalItemsSold;
+                document.getElementById('reportAvgSale').textContent = avgSale.toLocaleString('pt-MZ', { minimumFractionDigits: 2 }) + ' MZN';
+                document.getElementById('reportTopProduct').textContent = topProduct;
+                
+                // Atualizar gráficos de relatórios
+                setTimeout(updateReportCharts, 100);
+                
+                console.log('✅ Relatórios atualizados');
+            } catch (error) {
+                console.error('❌ Erro ao atualizar relatórios:', error);
+            }
+        }
+        
+        function updateInvestmentsData() {
+            console.log('📈 Atualizando dados de investimentos...');
+            
+            try {
+                const investments = getInvestments();
+                
+                // Atualizar estatísticas de investimentos
+                document.getElementById('roiPercentage').textContent = investments.roi_percentage.toFixed(1) + '%';
+                document.getElementById('growthRate').textContent = investments.growth_rate.toFixed(1) + '%';
+                document.getElementById('totalInvestment').textContent = investments.total_invested.toLocaleString('pt-MZ', { minimumFractionDigits: 2 }) + ' MZN';
+                document.getElementById('profitMargin').textContent = investments.profit_margin.toFixed(1) + '%';
+                
+                // Atualizar gráfico de investimentos
+                setTimeout(updateInvestmentChart, 100);
+                
+                console.log('✅ Dados de investimentos atualizados');
+            } catch (error) {
+                console.error('❌ Erro ao atualizar dados de investimentos:', error);
+            }
+        }
+        
+        function updatePlansData() {
+            console.log('👑 Atualizando dados de planos...');
+            
+            try {
+                const plans = getPlans();
+                const plansGrid = document.getElementById('plansGrid');
+                
+                if (plansGrid) {
+                    plansGrid.innerHTML = '';
+                    
+                    plans.forEach(plan => {
+                        const planCard = document.createElement('div');
+                        planCard.className = `plan-card ${plan.is_popular ? 'popular' : ''}`;
+                        
+                        const featuresList = plan.features.map(feature => {
+                            const featureNames = {
+                                'dashboard': 'Dashboard completo',
+                                'clientes': 'Gestão de clientes',
+                                'produtos': 'Gestão de produtos',
+                                'vendas': 'Gestão de vendas',
+                                'relatorios_basicos': 'Relatórios básicos',
+                                'relatorios_avancados': 'Relatórios avançados',
+                                'exportar': 'Exportação de dados',
+                                'importar': 'Importação de dados',
+                                'suporte_prioritario': 'Suporte prioritário',
+                                'api_access': 'Acesso à API'
+                            };
+                            return `<li><i class="fas fa-check"></i> ${featureNames[feature] || feature}</li>`;
+                        }).join('');
+                        
+                        planCard.innerHTML = `
+                            ${plan.is_popular ? '<div class="plan-badge">Mais Popular</div>' : ''}
+                            <h3>${plan.name}</h3>
+                            <p>${plan.description}</p>
+                            <div class="plan-price">${plan.price.toFixed(2)} MZN <span>/mês</span></div>
+                            <ul class="plan-features">
+                                ${featuresList}
+                            </ul>
+                            <button class="btn btn-primary" style="width: 100%;" onclick="selectPlan(${plan.id})">
+                                <i class="fas fa-shopping-cart"></i> Selecionar Plano
+                            </button>
+                        `;
+                        
+                        plansGrid.appendChild(planCard);
+                    });
+                }
+                
+                console.log('✅ Dados de planos atualizados');
+            } catch (error) {
+                console.error('❌ Erro ao atualizar dados de planos:', error);
+            }
+        }
+        
+        function updateSubscriptionsTable() {
+            console.log('📝 Atualizando tabela de assinaturas...');
+            
+            try {
+                const subscriptions = getSubscriptions();
+                const subscriptionsBody = document.getElementById('assinaturasBody');
+                
+                if (subscriptionsBody) {
+                    subscriptionsBody.innerHTML = '';
+                    
+                    subscriptions.forEach(subscription => {
+                        const statusClass = subscription.status === 'active' ? 'status-active' :
+                                          subscription.status === 'trial' ? 'status-trial' :
+                                          subscription.status === 'pending' ? 'status-pending' :
+                                          subscription.status === 'expired' ? 'status-expired' : 'status-pending';
+                        const statusText = subscription.status === 'active' ? 'Ativa' :
+                                         subscription.status === 'trial' ? 'Em Teste' :
+                                         subscription.status === 'pending' ? 'Pendente' :
+                                         subscription.status === 'expired' ? 'Expirada' : 'Cancelada';
+                        
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${subscription.client_name}</td>
+                            <td>${subscription.plan_name}</td>
+                            <td>${subscription.start_date}</td>
+                            <td>${subscription.end_date || '-'}</td>
+                            <td>${subscription.next_payment || '-'}</td>
+                            <td>${subscription.price.toFixed(2)} MZN</td>
+                            <td><span class="subscription-status ${statusClass}">${statusText}</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" onclick="viewSubscription(${subscription.id})">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="cancelSubscription(${subscription.id})">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </td>
+                        `;
+                        subscriptionsBody.appendChild(row);
+                    });
+                    
+                    // Atualizar contadores
+                    document.getElementById('subscriptionCount').textContent = subscriptions.length;
+                    
+                    // Atualizar estatísticas
+                    const activeSubscriptions = subscriptions.filter(s => s.status === 'active').length;
+                    const trialSubscriptions = subscriptions.filter(s => s.status === 'trial').length;
+                    const monthlyRevenue = subscriptions
+                        .filter(s => s.status === 'active')
+                        .reduce((sum, s) => sum + s.price, 0);
+                    
+                    document.getElementById('totalAssinaturas').textContent = subscriptions.length;
+                    document.getElementById('assinaturasAtivas').textContent = activeSubscriptions;
+                    document.getElementById('assinaturasTrial').textContent = trialSubscriptions;
+                    document.getElementById('receitaMensal').textContent = monthlyRevenue.toLocaleString('pt-MZ', { minimumFractionDigits: 2 }) + ' MZN';
+                }
+                
+                console.log('✅ Tabela de assinaturas atualizada');
+            } catch (error) {
+                console.error('❌ Erro ao atualizar tabela de assinaturas:', error);
+            }
+        }
+        
+        function updateStockData() {
+            console.log('📦 Atualizando dados de stock...');
+            
+            try {
+                const products = getProducts();
+                const stockMovements = getStockMovements();
+                
+                // Atualizar movimentações recentes
+                const stockMovementsBody = document.getElementById('stockMovementsBody');
+                if (stockMovementsBody) {
+                    stockMovementsBody.innerHTML = '';
+                    
+                    stockMovements.slice(-10).reverse().forEach(movement => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${movement.date}</td>
+                            <td>${movement.product_name}</td>
+                            <td>
+                                <span class="badge ${movement.type === 'entrada' ? 'badge-success' : 'badge-danger'}">
+                                    ${movement.type === 'entrada' ? 'Entrada' : 'Saída'}
+                                </span>
+                            </td>
+                            <td>${movement.quantity}</td>
+                            <td>${movement.responsible}</td>
+                        `;
+                        stockMovementsBody.appendChild(row);
+                    });
+                }
+                
+                // Atualizar avisos de stock
+                const stockWarningsList = document.getElementById('stockWarningsList');
+                if (stockWarningsList) {
+                    stockWarningsList.innerHTML = '';
+                    
+                    const lowStockProducts = products.filter(p => p.stock <= p.min_stock);
+                    
+                    if (lowStockProducts.length === 0) {
+                        stockWarningsList.innerHTML = `
+                            <div style="padding: 15px; background: #d4edda; border-radius: 8px; color: #155724;">
+                                <i class="fas fa-check-circle"></i> Todos os produtos têm stock suficiente.
+                            </div>
+                        `;
+                    } else {
+                        lowStockProducts.forEach(product => {
+                            const warning = document.createElement('div');
+                            warning.style.cssText = 'padding: 12px; background: #fff3cd; border-radius: 8px; margin-bottom: 10px; color: #856404;';
+                            warning.innerHTML = `
+                                <div style="font-weight: 600; margin-bottom: 5px;">
+                                    <i class="fas fa-exclamation-triangle"></i> ${product.name}
+                                </div>
+                                <div style="font-size: 0.9rem;">
+                                    Stock: ${product.stock} | Mínimo: ${product.min_stock}
+                                </div>
+                            `;
+                            stockWarningsList.appendChild(warning);
+                        });
+                    }
+                }
+                
+                // Atualizar relatório de stock
+                const stockReportBody = document.getElementById('stockReportBody');
+                if (stockReportBody) {
+                    stockReportBody.innerHTML = '';
+                    
+                    products.forEach(product => {
+                        const status = product.stock === 0 ? 'badge-danger' :
+                                      product.stock <= product.min_stock ? 'badge-warning' : 'badge-success';
+                        const statusText = product.stock === 0 ? 'Esgotado' :
+                                          product.stock <= product.min_stock ? 'Stock Baixo' : 'Normal';
+                        const stockValue = product.stock * (product.cost || product.price);
+                        
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${product.code}</td>
+                            <td>${product.name}</td>
+                            <td>${product.category}</td>
+                            <td>${product.stock}</td>
+                            <td>${product.min_stock}</td>
+                            <td>${Math.ceil(product.min_stock * 2)}</td>
+                            <td>${stockValue.toFixed(2)} MZN</td>
+                            <td><span class="badge ${status}">${statusText}</span></td>
+                        `;
+                        stockReportBody.appendChild(row);
+                    });
+                }
+                
+                console.log('✅ Dados de stock atualizados');
+            } catch (error) {
+                console.error('❌ Erro ao atualizar dados de stock:', error);
+            }
+        }
+        
+        function updateSuppliersTable() {
+            console.log('🚚 Atualizando tabela de fornecedores...');
+            
+            try {
+                const suppliers = getSuppliers();
+                const suppliersBody = document.getElementById('fornecedoresBody');
+                
+                if (suppliersBody) {
+                    suppliersBody.innerHTML = '';
+                    
+                    suppliers.forEach(supplier => {
+                        const ratingStars = '★'.repeat(Math.floor(supplier.rating)) + '☆'.repeat(5 - Math.floor(supplier.rating));
+                        
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${supplier.name}</td>
+                            <td>${supplier.contact}</td>
+                            <td>${supplier.products.join(', ')}</td>
+                            <td>${supplier.last_delivery}</td>
+                            <td>
+                                <span style="color: #f39c12;">${ratingStars}</span>
+                                <span style="font-size: 0.85rem; color: #666;"> (${supplier.rating})</span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" onclick="editSupplier(${supplier.id})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteSupplier(${supplier.id})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        `;
+                        suppliersBody.appendChild(row);
+                    });
+                }
+                
+                console.log('✅ Tabela de fornecedores atualizada');
+            } catch (error) {
+                console.error('❌ Erro ao atualizar tabela de fornecedores:', error);
+            }
+        }
+        
+        function updateTeamTable() {
+            console.log('👥 Atualizando tabela da equipa...');
+            
+            try {
+                const team = getTeam();
+                const teamBody = document.getElementById('equipaBody');
+                
+                if (teamBody) {
+                    teamBody.innerHTML = '';
+                    
+                    team.forEach(member => {
+                        const statusClass = member.status === 'active' ? 'badge-success' : 'badge-danger';
+                        const statusText = member.status === 'active' ? 'Ativo' : 'Inativo';
+                        
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${member.name}</td>
+                            <td>${member.role}</td>
+                            <td>${member.contact}</td>
+                            <td>${member.join_date}</td>
+                            <td>${member.sales.toFixed(2)} MZN</td>
+                            <td><span class="badge ${statusClass}">${statusText}</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" onclick="editTeamMember(${member.id})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteTeamMember(${member.id})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        `;
+                        teamBody.appendChild(row);
+                    });
+                    
+                    // Atualizar estatísticas
+                    document.getElementById('totalMembros').textContent = team.length;
+                    document.getElementById('membrosAtivos').textContent = team.filter(m => m.status === 'active').length;
+                    
+                    const totalSales = team.reduce((sum, m) => sum + m.sales, 0);
+                    document.getElementById('vendasEquipa').textContent = totalSales.toLocaleString('pt-MZ', { minimumFractionDigits: 2 }) + ' MZN';
+                    
+                    const topSeller = team.reduce((max, m) => m.sales > max.sales ? m : max, team[0] || { name: '-' });
+                    document.getElementById('topVendedor').textContent = topSeller.name;
+                }
+                
+                console.log('✅ Tabela da equipa atualizada');
+            } catch (error) {
+                console.error('❌ Erro ao atualizar tabela da equipa:', error);
+            }
+        }
+        
+        function loadSettings() {
+            console.log('⚙️ Carregando configurações...');
+            
+            try {
+                const settings = getSettings();
+                const subscriptionSettings = getSubscriptionSettings();
+                
+                // Carregar configurações da empresa
+                document.getElementById('companyName').value = settings.company_name || '';
+                document.getElementById('companyNIF').value = settings.company_nif || '';
+                document.getElementById('companyAddress').value = settings.company_address || '';
+                document.getElementById('companyPhone').value = settings.company_phone || '';
+                document.getElementById('companyEmail').value = settings.company_email || '';
+                
+                // Carregar configurações de faturação
+                document.getElementById('invoicePrefix').value = settings.invoice_prefix || 'FAT';
+                document.getElementById('invoiceStartNumber').value = settings.invoice_start_number || 1001;
+                document.getElementById('invoiceFooter').value = settings.invoice_footer || 'Obrigado pela sua preferência!';
+                document.getElementById('autoPrintInvoice').checked = settings.auto_print_invoice !== false;
+                
+                // Carregar configurações gerais
+                document.getElementById('currency').value = settings.currency || 'MZN';
+                document.getElementById('taxRate').value = settings.tax_rate || 17;
+                document.getElementById('lowStockThreshold').value = settings.low_stock_threshold || 10;
+                document.getElementById('timezone').value = settings.timezone || 'Africa/Maputo';
+                
+                // Carregar notificações e alertas
+                document.getElementById('enableStockAlerts').checked = settings.enable_stock_alerts !== false;
+                document.getElementById('enableSalesReports').checked = settings.enable_sales_reports !== false;
+                document.getElementById('enableClientBirthdayAlerts').checked = settings.enable_client_birthday_alerts !== false;
+                document.getElementById('enableAutoBackup').checked = settings.enable_auto_backup !== false;
+                document.getElementById('backupFrequency').value = settings.backup_frequency || 'weekly';
+                
+                // Carregar configurações de assinatura
+                document.getElementById('subscriptionCurrency').value = subscriptionSettings.currency || 'MZN';
+                document.getElementById('trialPeriodDays').value = subscriptionSettings.trial_period_days || 7;
+                document.getElementById('gracePeriodDays').value = subscriptionSettings.grace_period_days || 3;
+                document.getElementById('autoRenewal').value = subscriptionSettings.auto_renewal || 'enabled';
+                document.getElementById('invoiceDaysBefore').value = subscriptionSettings.invoice_days_before || 7;
+                document.getElementById('reminderDays').value = subscriptionSettings.reminder_days ? subscriptionSettings.reminder_days.join(',') : '7,3,1';
+                
+                // Carregar métodos de pagamento
+                const paymentMethods = subscriptionSettings.payment_methods || ['Multicaixa', 'M-Pesa', 'E-Mola', 'Transferência'];
+                document.getElementById('paymentMulticaixa').checked = paymentMethods.includes('Multicaixa');
+                document.getElementById('paymentMPesa').checked = paymentMethods.includes('M-Pesa');
+                document.getElementById('paymentEMola').checked = paymentMethods.includes('E-Mola');
+                document.getElementById('paymentTransfer').checked = paymentMethods.includes('Transferência');
+                document.getElementById('paymentCard').checked = paymentMethods.includes('Cartão');
+                
+                // Carregar notificações de assinatura
+                document.getElementById('notifyTrialEnd').checked = subscriptionSettings.notify_trial_end !== false;
+                document.getElementById('notifyBeforeRenewal').checked = subscriptionSettings.notify_before_renewal !== false;
+                document.getElementById('notifyPaymentFailed').checked = subscriptionSettings.notify_payment_failed !== false;
+                document.getElementById('notifySubscriptionEnd').checked = subscriptionSettings.notify_subscription_end !== false;
+                document.getElementById('notifyAutoRenewal').checked = subscriptionSettings.notify_auto_renewal !== false;
+                document.getElementById('sendWelcomeEmail').checked = subscriptionSettings.send_welcome_email !== false;
+                
+                console.log('✅ Configurações carregadas');
+            } catch (error) {
+                console.error('❌ Erro ao carregar configurações:', error);
+            }
+        }
+        
+        // ==============================================
+        // FUNÇÕES DE OPERAÇÕES CRUD
+        // ==============================================
+        
+        function addNewClient(formData) {
+            try {
+                const clients = getClients();
+                const nextId = getNextId('client');
+                
+                const newClient = {
+                    id: nextId,
+                    name: formData.name,
+                    phone: formData.phone,
+                    email: formData.email || '',
+                    nif: formData.nif || '',
+                    address: formData.address || '',
+                    type: formData.type || 'regular',
+                    notes: formData.notes || '',
+                    total_purchases: 0,
+                    last_purchase: null,
+                    created_at: new Date().toISOString().split('T')[0]
+                };
+                
+                clients.push(newClient);
+                saveClients(clients);
+                saveNextId('client', nextId + 1);
+                
+                showNotification('Cliente adicionado com sucesso!', 'success');
+                closeModal('addClientModal');
+                updateClientsTable();
+                
+                // Limpar formulário
+                document.getElementById('addClientForm').reset();
+                
+                return true;
+            } catch (error) {
+                console.error('❌ Erro ao adicionar cliente:', error);
+                showNotification('Erro ao adicionar cliente: ' + error.message, 'error');
+                return false;
+            }
+        }
+        
+        function addNewProduct(formData) {
+            try {
+                const products = getProducts();
+                const nextId = getNextId('product');
+                
+                const newProduct = {
+                    id: nextId,
+                    code: formData.code,
+                    name: formData.name,
+                    category: formData.category || 'Geral',
+                    price: parseFloat(formData.price),
+                    cost: formData.cost ? parseFloat(formData.cost) : null,
+                    stock: parseInt(formData.stock) || 0,
+                    min_stock: parseInt(formData.min_stock) || 10,
+                    barcode: formData.barcode || '',
+                    supplier: formData.supplier || '',
+                    description: formData.description || ''
+                };
+                
+                products.push(newProduct);
+                saveProducts(products);
+                saveNextId('product', nextId + 1);
+                
+                showNotification('Produto adicionado com sucesso!', 'success');
+                closeModal('addProductModal');
+                updateProductsTable();
+                
+                // Limpar formulário
+                document.getElementById('addProductForm').reset();
+                
+                return true;
+            } catch (error) {
+                console.error('❌ Erro ao adicionar produto:', error);
+                showNotification('Erro ao adicionar produto: ' + error.message, 'error');
+                return false;
+            }
+        }
+        
+        function addNewSale(saleData) {
+            try {
+                const sales = getSales();
+                const nextId = getNextId('sale');
+                
+                // Gerar número de recibo
+                const receiptNo = 'REC' + String(nextId).padStart(3, '0');
+                
+                const newSale = {
+                    id: nextId,
+                    receipt_no: receiptNo,
+                    client_id: saleData.client_id || null,
+                    client_name: saleData.client_name || 'Cliente Avulso',
+                    items: saleData.items,
+                    subtotal: saleData.subtotal,
+                    discount: saleData.discount || 0,
+                    tax: saleData.tax,
+                    total: saleData.total,
+                    payment_method: saleData.payment_method,
+                    amount_received: saleData.amount_received,
+                    change: saleData.change,
+                    date: new Date().toISOString().split('T')[0],
+                    time: new Date().toLocaleTimeString('pt-MZ', { hour: '2-digit', minute: '2-digit' }),
+                    seller: 'Administrador'
+                };
+                
+                // Atualizar stock dos produtos
+                const products = getProducts();
+                saleData.items.forEach(item => {
+                    const product = products.find(p => p.id === item.product_id);
+                    if (product) {
+                        product.stock -= item.quantity;
+                        if (product.stock < 0) product.stock = 0;
+                    }
+                });
+                saveProducts(products);
+                
+                // Adicionar movimento de stock
+                const stockMovements = getStockMovements();
+                const nextMovementId = getNextId('stock_movement');
+                
+                saleData.items.forEach(item => {
+                    const product = products.find(p => p.id === item.product_id);
+                    if (product) {
+                        stockMovements.push({
+                            id: nextMovementId,
+                            product_id: item.product_id,
+                            product_name: product.name,
+                            type: 'saida',
+                            quantity: item.quantity,
+                            reason: 'venda',
+                            client_id: saleData.client_id,
+                            client_name: saleData.client_name,
+                            date: new Date().toISOString().split('T')[0],
+                            responsible: 'Administrador',
+                            notes: `Venda ${receiptNo}`
+                        });
+                    }
+                });
+                saveStockMovements(stockMovements);
+                saveNextId('stock_movement', nextMovementId + saleData.items.length);
+                
+                // Adicionar venda
+                sales.push(newSale);
+                saveSales(sales);
+                saveNextId('sale', nextId + 1);
+                
+                // Atualizar cliente (se houver)
+                if (saleData.client_id) {
+                    const clients = getClients();
+                    const client = clients.find(c => c.id === saleData.client_id);
+                    if (client) {
+                        client.total_purchases = (client.total_purchases || 0) + saleData.total;
+                        client.last_purchase = new Date().toISOString().split('T')[0];
+                        saveClients(clients);
+                    }
+                }
+                
+                showNotification(`Venda ${receiptNo} registrada com sucesso! Troco: ${saleData.change.toFixed(2)} MZN`, 'success');
+                closeModal('newSaleModal');
+                updateDashboard();
+                updateSalesTable();
+                
+                return true;
+            } catch (error) {
+                console.error('❌ Erro ao adicionar venda:', error);
+                showNotification('Erro ao registrar venda: ' + error.message, 'error');
+                return false;
+            }
+        }
+        
+        function viewSale(saleId) {
+            try {
+                const sales = getSales();
+                const sale = sales.find(s => s.id === saleId);
+                
+                if (!sale) {
+                    showNotification('Venda não encontrada!', 'error');
+                    return;
+                }
+                
+                const saleDetailsContent = document.getElementById('saleDetailsContent');
+                if (saleDetailsContent) {
+                    // Formatar itens da venda
+                    const itemsHtml = sale.items.map(item => `
+                        <tr>
+                            <td>${item.name}</td>
+                            <td>${item.quantity}</td>
+                            <td>${item.price.toFixed(2)} MZN</td>
+                            <td>${item.total.toFixed(2)} MZN</td>
+                        </tr>
+                    `).join('');
+                    
+                    saleDetailsContent.innerHTML = `
+                        <div style="padding: 20px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
+                                <div>
+                                    <h3 style="margin-bottom: 15px; color: var(--bizzflow-primary);">Informações da Venda</h3>
+                                    <div style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                            <span><strong>Recibo Nº:</strong></span>
+                                            <span>${sale.receipt_no}</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                            <span><strong>Data:</strong></span>
+                                            <span>${sale.date} ${sale.time}</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                            <span><strong>Cliente:</strong></span>
+                                            <span>${sale.client_name}</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                            <span><strong>Vendedor:</strong></span>
+                                            <span>${sale.seller}</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                            <span><strong>Forma de Pagamento:</strong></span>
+                                            <span>${sale.payment_method}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <h3 style="margin-bottom: 15px; color: var(--bizzflow-primary);">Resumo Financeiro</h3>
+                                    <div style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                            <span>Subtotal:</span>
+                                            <span>${sale.subtotal.toFixed(2)} MZN</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                            <span>Desconto:</span>
+                                            <span>${sale.discount.toFixed(2)} MZN</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                            <span>IVA (17%):</span>
+                                            <span>${sale.tax.toFixed(2)} MZN</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; font-weight: bold; padding-top: 10px; border-top: 1px solid #ddd;">
+                                            <span>Total:</span>
+                                            <span>${sale.total.toFixed(2)} MZN</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+                                            <span>Valor Recebido:</span>
+                                            <span>${sale.amount_received.toFixed(2)} MZN</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; font-weight: bold; margin-top: 10px; color: #27ae60;">
+                                            <span>Troco:</span>
+                                            <span>${sale.change.toFixed(2)} MZN</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <h3 style="margin-bottom: 15px; color: var(--bizzflow-primary);">Itens da Venda</h3>
+                            <div class="table-container">
+                                <table style="width: 100%;">
+                                    <thead>
+                                        <tr>
+                                            <th>Produto</th>
+                                            <th>Quantidade</th>
+                                            <th>Preço Unitário</th>
+                                            <th>Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${itemsHtml}
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div style="text-align: center; margin-top: 30px;">
+                                <button class="btn btn-primary" onclick="printSale(${saleId})">
+                                    <i class="fas fa-print"></i> Imprimir Recibo
+                                </button>
+                                <button class="btn btn-danger" onclick="closeModal('viewSaleModal')" style="margin-left: 10px;">
+                                    <i class="fas fa-times"></i> Fechar
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    openModal('viewSaleModal');
+                }
+            } catch (error) {
+                console.error('❌ Erro ao visualizar venda:', error);
+                showNotification('Erro ao visualizar venda: ' + error.message, 'error');
+            }
+        }
+        
+        function deleteSale(saleId) {
+            if (confirm('Tem certeza que deseja excluir esta venda? Esta ação não pode ser desfeita.')) {
+                try {
+                    const sales = getSales();
+                    const saleIndex = sales.findIndex(s => s.id === saleId);
+                    
+                    if (saleIndex === -1) {
+                        showNotification('Venda não encontrada!', 'error');
+                        return;
+                    }
+                    
+                    // Reverter stock (se necessário)
+                    const sale = sales[saleIndex];
+                    const products = getProducts();
+                    
+                    sale.items.forEach(item => {
+                        const product = products.find(p => p.id === item.product_id);
+                        if (product) {
+                            product.stock += item.quantity;
+                        }
+                    });
+                    saveProducts(products);
+                    
+                    // Remover venda
+                    sales.splice(saleIndex, 1);
+                    saveSales(sales);
+                    
+                    showNotification('Venda excluída com sucesso!', 'success');
+                    updateDashboard();
+                    updateSalesTable();
+                } catch (error) {
+                    console.error('❌ Erro ao excluir venda:', error);
+                    showNotification('Erro ao excluir venda: ' + error.message, 'error');
+                }
+            }
+        }
+        
+        function editClient(clientId) {
+            showNotification('Funcionalidade de edição de cliente em desenvolvimento!', 'info');
+        }
+        
+        function viewClient(clientId) {
+            showNotification('Funcionalidade de visualização de cliente em desenvolvimento!', 'info');
+        }
+        
+        function deleteClient(clientId) {
+            if (confirm('Tem certeza que deseja excluir este cliente? Esta ação não pode ser desfeita.')) {
+                try {
+                    const clients = getClients();
+                    const clientIndex = clients.findIndex(c => c.id === clientId);
+                    
+                    if (clientIndex === -1) {
+                        showNotification('Cliente não encontrado!', 'error');
+                        return;
+                    }
+                    
+                    clients.splice(clientIndex, 1);
+                    saveClients(clients);
+                    
+                    showNotification('Cliente excluído com sucesso!', 'success');
+                    updateClientsTable();
+                } catch (error) {
+                    console.error('❌ Erro ao excluir cliente:', error);
+                    showNotification('Erro ao excluir cliente: ' + error.message, 'error');
+                }
+            }
+        }
+        
+        function editProduct(productId) {
+            showNotification('Funcionalidade de edição de produto em desenvolvimento!', 'info');
+        }
+        
+        function viewProduct(productId) {
+            showNotification('Funcionalidade de visualização de produto em desenvolvimento!', 'info');
+        }
+        
+        function deleteProduct(productId) {
+            if (confirm('Tem certeza que deseja excluir este produto? Esta ação não pode ser desfeita.')) {
+                try {
+                    const products = getProducts();
+                    const productIndex = products.findIndex(p => p.id === productId);
+                    
+                    if (productIndex === -1) {
+                        showNotification('Produto não encontrado!', 'error');
+                        return;
+                    }
+                    
+                    products.splice(productIndex, 1);
+                    saveProducts(products);
+                    
+                    showNotification('Produto excluído com sucesso!', 'success');
+                    updateProductsTable();
+                } catch (error) {
+                    console.error('❌ Erro ao excluir produto:', error);
+                    showNotification('Erro ao excluir produto: ' + error.message, 'error');
+                }
+            }
+        }
+        
+        function editSupplier(supplierId) {
+            showNotification('Funcionalidade de edição de fornecedor em desenvolvimento!', 'info');
+        }
+        
+        function deleteSupplier(supplierId) {
+            if (confirm('Tem certeza que deseja excluir este fornecedor? Esta ação não pode ser desfeita.')) {
+                try {
+                    const suppliers = getSuppliers();
+                    const supplierIndex = suppliers.findIndex(s => s.id === supplierId);
+                    
+                    if (supplierIndex === -1) {
+                        showNotification('Fornecedor não encontrado!', 'error');
+                        return;
+                    }
+                    
+                    suppliers.splice(supplierIndex, 1);
+                    saveSuppliers(suppliers);
+                    
+                    showNotification('Fornecedor excluído com sucesso!', 'success');
+                    updateSuppliersTable();
+                } catch (error) {
+                    console.error('❌ Erro ao excluir fornecedor:', error);
+                    showNotification('Erro ao excluir fornecedor: ' + error.message, 'error');
+                }
+            }
+        }
+        
+        function editTeamMember(memberId) {
+            showNotification('Funcionalidade de edição de membro da equipa em desenvolvimento!', 'info');
+        }
+        
+        function deleteTeamMember(memberId) {
+            if (confirm('Tem certeza que deseja excluir este membro da equipa? Esta ação não pode ser desfeita.')) {
+                try {
+                    const team = getTeam();
+                    const memberIndex = team.findIndex(m => m.id === memberId);
+                    
+                    if (memberIndex === -1) {
+                        showNotification('Membro da equipa não encontrado!', 'error');
+                        return;
+                    }
+                    
+                    team.splice(memberIndex, 1);
+                    saveTeam(team);
+                    
+                    showNotification('Membro da equipa excluído com sucesso!', 'success');
+                    updateTeamTable();
+                } catch (error) {
+                    console.error('❌ Erro ao excluir membro da equipa:', error);
+                    showNotification('Erro ao excluir membro da equipa: ' + error.message, 'error');
+                }
+            }
+        }
+        
+        function viewSubscription(subscriptionId) {
+            showNotification('Funcionalidade de visualização de assinatura em desenvolvimento!', 'info');
+        }
+        
+        function cancelSubscription(subscriptionId) {
+            if (confirm('Tem certeza que deseja cancelar esta assinatura?')) {
+                try {
+                    const subscriptions = getSubscriptions();
+                    const subscription = subscriptions.find(s => s.id === subscriptionId);
+                    
+                    if (!subscription) {
+                        showNotification('Assinatura não encontrada!', 'error');
+                        return;
+                    }
+                    
+                    subscription.status = 'cancelled';
+                    saveSubscriptions(subscriptions);
+                    
+                    showNotification('Assinatura cancelada com sucesso!', 'success');
+                    updateSubscriptionsTable();
+                } catch (error) {
+                    console.error('❌ Erro ao cancelar assinatura:', error);
+                    showNotification('Erro ao cancelar assinatura: ' + error.message, 'error');
+                }
+            }
+        }
+        
+        function selectPlan(planId) {
+            showNotification(`Plano ${planId} selecionado! Em uma aplicação real, isto redirecionaria para o checkout.`, 'info');
+        }
+        
+        function printSale(saleId) {
+            showNotification('Funcionalidade de impressão em desenvolvimento!', 'info');
+        }
+        
+        // ==============================================
+        // FUNÇÕES DE EXPORTAÇÃO/IMPORTAÇÃO
+        // ==============================================
+        
+        function exportData(type, format) {
+            let data, filename;
+            
+            switch(type) {
+                case 'clientes':
+                    data = getClients();
+                    filename = `clientes_${new Date().toISOString().split('T')[0]}`;
+                    break;
+                case 'produtos':
+                    data = getProducts();
+                    filename = `produtos_${new Date().toISOString().split('T')[0]}`;
+                    break;
+                case 'vendas':
+                    data = getSales();
+                    filename = `vendas_${new Date().toISOString().split('T')[0]}`;
+                    break;
+                case 'assinaturas':
+                    data = getSubscriptions();
+                    filename = `assinaturas_${new Date().toISOString().split('T')[0]}`;
+                    break;
+                case 'all':
+                    data = {
+                        clientes: getClients(),
+                        produtos: getProducts(),
+                        vendas: getSales(),
+                        fornecedores: getSuppliers(),
+                        assinaturas: getSubscriptions(),
+                        equipa: getTeam(),
+                        planos: getPlans(),
+                        configuracoes: getSettings()
+                    };
+                    filename = `backup_completo_${new Date().toISOString().split('T')[0]}`;
+                    break;
+                default:
+                    showNotification('Tipo de exportação não suportado!', 'error');
+                    return;
+            }
+            
+            let content, mimeType, extension;
+            
+            if (format === 'csv') {
+                content = convertToCSV(data, type);
+                mimeType = 'text/csv;charset=utf-8;';
+                extension = 'csv';
+            } else if (format === 'excel') {
+                // Para simplificar, usaremos CSV como Excel
+                content = convertToCSV(data, type);
+                mimeType = 'application/vnd.ms-excel;charset=utf-8;';
+                extension = 'xls';
+            } else if (format === 'pdf') {
+                showNotification('Exportação para PDF em desenvolvimento!', 'info');
+                return;
+            } else {
+                showNotification('Formato de exportação não suportado!', 'error');
+                return;
+            }
+            
+            // Criar e baixar arquivo
+            const blob = new Blob([content], { type: mimeType });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', `${filename}.${extension}`);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showNotification(`Exportação ${type} em ${format} realizada com sucesso!`, 'success');
+        }
+        
+        function convertToCSV(data, type) {
+            if (type === 'all') {
+                // Para backup completo, criar múltiplos CSVs em um arquivo ZIP seria ideal
+                // Por simplicidade, vamos exportar apenas clientes
+                data = data.clientes;
+                type = 'clientes';
+            }
+            
+            if (!Array.isArray(data) || data.length === 0) {
+                return 'No data available';
+            }
+            
+            // Obter cabeçalhos
+            const headers = Object.keys(data[0]);
+            
+            // Criar linhas CSV
+            const rows = data.map(row => {
+                return headers.map(header => {
+                    const cell = row[header];
+                    // Escapar vírgulas e aspas
+                    if (typeof cell === 'string' && (cell.includes(',') || cell.includes('"'))) {
+                        return `"${cell.replace(/"/g, '""')}"`;
+                    }
+                    return cell;
+                }).join(',');
+            });
+            
+            return [headers.join(','), ...rows].join('\n');
+        }
+        
+        function exportReportData(format) {
+            showNotification(`Exportação de relatório em ${format} em desenvolvimento!`, 'info');
+        }
+        
+        function exportStockData(format) {
+            exportData('produtos', format);
+        }
+        
+        function showExportOptions() {
+            const exportOptions = document.getElementById('exportOptions');
+            if (exportOptions) {
+                exportOptions.style.display = exportOptions.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+        
+        function showImportTemplate(type) {
+            showNotification(`Template de importação para ${type} em desenvolvimento!`, 'info');
+        }
+        
+        function downloadTemplate(type) {
+            showNotification(`Download de template para ${type} em desenvolvimento!`, 'info');
+        }
+        
+        function downloadReport(type) {
+            showNotification(`Download de relatório ${type} em desenvolvimento!`, 'info');
+        }
+        
+        function generateCustomReport() {
+            showNotification('Geração de relatório personalizado em desenvolvimento!', 'info');
+        }
+        
         // ==============================================
         // INICIALIZAÇÃO
         // ==============================================
@@ -4888,6 +6348,190 @@
                     showNotification('Logout realizado com sucesso!', 'info');
                 });
             }
+            
+            // Configurar navegação do menu lateral
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const page = this.getAttribute('data-page');
+                    if (page) {
+                        showPage(page);
+                    }
+                });
+            });
+            
+            // Configurar tabs de login
+            document.querySelectorAll('[data-tab]').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    switchLoginTab(tabId);
+                });
+            });
+            
+            // Configurar botões principais
+            document.getElementById('novaVendaBtn')?.addEventListener('click', () => {
+                openModal('newSaleModal');
+            });
+            
+            document.getElementById('novaVendaModalBtn')?.addEventListener('click', () => {
+                openModal('newSaleModal');
+            });
+            
+            document.getElementById('quickSaleDashboardBtn')?.addEventListener('click', () => {
+                openModal('newSaleModal');
+            });
+            
+            document.getElementById('quickSaleBtn')?.addEventListener('click', () => {
+                openModal('newSaleModal');
+            });
+            
+            document.getElementById('novoClienteBtn')?.addEventListener('click', () => {
+                openModal('addClientModal');
+            });
+            
+            document.getElementById('novoProdutoBtn')?.addEventListener('click', () => {
+                openModal('addProductModal');
+            });
+            
+            document.getElementById('notificationBtn')?.addEventListener('click', () => {
+                openModal('notificationsModal');
+            });
+            
+            document.getElementById('novaEntradaBtn')?.addEventListener('click', () => {
+                openModal('stockEntryModal');
+            });
+            
+            document.getElementById('novaSaidaBtn')?.addEventListener('click', () => {
+                openModal('stockOutputModal');
+            });
+            
+            document.getElementById('novoPlanoBtn')?.addEventListener('click', () => {
+                openModal('newPlanModal');
+            });
+            
+            document.getElementById('novaAssinaturaBtn')?.addEventListener('click', () => {
+                openModal('newSubscriptionModal');
+            });
+            
+            document.getElementById('novoFornecedorBtn')?.addEventListener('click', () => {
+                showNotification('Funcionalidade de novo fornecedor em desenvolvimento!', 'info');
+            });
+            
+            document.getElementById('novaEncomendaBtn')?.addEventListener('click', () => {
+                showNotification('Funcionalidade de nova encomenda em desenvolvimento!', 'info');
+            });
+            
+            document.getElementById('novoMembroBtn')?.addEventListener('click', () => {
+                showNotification('Funcionalidade de novo membro da equipa em desenvolvimento!', 'info');
+            });
+            
+            // Configurar formulário de adicionar cliente
+            const addClientForm = document.getElementById('addClientForm');
+            if (addClientForm) {
+                addClientForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const formData = {
+                        name: document.getElementById('clientName').value,
+                        phone: document.getElementById('clientPhone').value,
+                        email: document.getElementById('clientEmail').value,
+                        nif: document.getElementById('clientNIF').value,
+                        address: document.getElementById('clientAddress').value,
+                        type: document.getElementById('clientType').value,
+                        notes: document.getElementById('clientNotes').value
+                    };
+                    
+                    addNewClient(formData);
+                });
+            }
+            
+            // Configurar formulário de adicionar produto
+            const addProductForm = document.getElementById('addProductForm');
+            if (addProductForm) {
+                addProductForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const formData = {
+                        code: document.getElementById('productCode').value,
+                        name: document.getElementById('productName').value,
+                        category: document.getElementById('productCategory').value,
+                        price: document.getElementById('productPrice').value,
+                        cost: document.getElementById('productCost').value,
+                        stock: document.getElementById('productStock').value,
+                        min_stock: document.getElementById('productMinStock').value,
+                        barcode: document.getElementById('productBarcode').value,
+                        supplier: document.getElementById('productSupplier').value,
+                        description: document.getElementById('productDescription').value
+                    };
+                    
+                    addNewProduct(formData);
+                });
+            }
+            
+            // Configurar sistema de venda rápida (simplificado)
+            const completeSaleBtn = document.getElementById('completeSaleBtn');
+            if (completeSaleBtn) {
+                completeSaleBtn.addEventListener('click', function() {
+                    // Dados de exemplo para uma venda
+                    const saleData = {
+                        client_id: 1,
+                        client_name: 'João Maputo',
+                        items: [
+                            { product_id: 1, name: 'Arroz 5kg', quantity: 2, price: 350, total: 700 },
+                            { product_id: 3, name: 'Óleo 1L', quantity: 1, price: 150, total: 150 }
+                        ],
+                        subtotal: 850,
+                        discount: 0,
+                        tax: 144.5,
+                        total: 994.5,
+                        payment_method: 'Multicaixa',
+                        amount_received: 1000,
+                        change: 5.5
+                    };
+                    
+                    addNewSale(saleData);
+                });
+            }
+            
+            // Configurar botões de funcionalidade
+            document.getElementById('downloadAppBtn')?.addEventListener('click', () => {
+                showNotification('A aplicação móvel está disponível nas lojas oficiais!', 'info');
+            });
+            
+            document.getElementById('helpCenterBtn')?.addEventListener('click', () => {
+                showNotification('Central de ajuda em desenvolvimento!', 'info');
+            });
+            
+            document.getElementById('liveSupportBtn')?.addEventListener('click', () => {
+                showNotification('Suporte ao vivo em desenvolvimento!', 'info');
+            });
+            
+            document.getElementById('contactSupportBtn')?.addEventListener('click', () => {
+                showNotification('Entre em contacto através do email: suporte@bizzflow.co.mz', 'info');
+            });
+            
+            document.getElementById('reporStockBtn')?.addEventListener('click', () => {
+                openModal('stockEntryModal');
+            });
+            
+            document.getElementById('inventarioBtn')?.addEventListener('click', () => {
+                showNotification('Funcionalidade de inventário em desenvolvimento!', 'info');
+            });
+            
+            document.getElementById('importarProdutosBtn')?.addEventListener('click', () => {
+                showNotification('Funcionalidade de importação em desenvolvimento!', 'info');
+            });
+            
+            document.getElementById('novoRecebimentoBtn')?.addEventListener('click', () => {
+                showNotification('Funcionalidade de novo recebimento em desenvolvimento!', 'info');
+            });
+            
+            document.getElementById('novoPagamentoBtn')?.addEventListener('click', () => {
+                showNotification('Funcionalidade de novo pagamento em desenvolvimento!', 'info');
+            });
+            
+            document.getElementById('loadMoreSalesBtn')?.addEventListener('click', () => {
+                showNotification('Carregando mais vendas...', 'info');
+            });
             
             console.log('✅ Aplicação inicializada com sucesso!');
         });
