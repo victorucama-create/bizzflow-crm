@@ -3840,8 +3840,18 @@
             </form>
         </div>
     </div>
+
+    <!-- Sentry - Monitoramento de Erros -->
+    <script src="https://browser.sentry-cdn.com/7.28.0/bundle.min.js"></script>
+    <script>
+      Sentry.init({
+        dsn: "https://seu-dsn@sentry.io/1234567",
+        environment: "production"
+      });
+    </script>
+
     <!-- JavaScript -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="./js/lib/chart.min.js"></script>
     <script>
         // Inicializar localStorage com dados de exemplo se estiver vazio
         function initializeData() {
@@ -4444,11 +4454,8 @@
             
             const salesChartCtx = document.getElementById('salesChart').getContext('2d');
             if (window.salesChart) {
-                if (window.salesChart && typeof window.salesChart.destroy === 'function') {
-    window.salesChart.destroy();
-} else {
-    console.warn('⚠️ salesChart não disponível para destroy');
-}
+                window.salesChart.destroy();
+            }
             
             window.salesChart = new Chart(salesChartCtx, {
                 type: 'line',
@@ -6280,173 +6287,170 @@
                 document.getElementById('sendWelcomeEmail').checked = subscriptionSettings.send_welcome_email !== false;
             }
             
-                    // Botão repor stock
-        document.getElementById('reporStockBtn').addEventListener('click', function() {
-            initStockEntryModal();
-            showModal('stockEntryModal');
-        });
-        
-        // Botões de stock
-        document.getElementById('novaEntradaBtn').addEventListener('click', function() {
-            initStockEntryModal();
-            showModal('stockEntryModal');
-        });
-        
-        document.getElementById('novaSaidaBtn').addEventListener('click', function() {
-            initStockOutputModal();
-            showModal('stockOutputModal');
-        });
-        
-        // Formulário entrada de stock
-        document.getElementById('stockEntryForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const nextMovementId = getNextId('stock_movement');
-            const productId = document.getElementById('stockEntryProduct').value;
-            const quantity = parseInt(document.getElementById('stockEntryQuantity').value);
-            const unitCost = parseFloat(document.getElementById('stockEntryUnitCost').value) || 0;
-            const supplierId = document.getElementById('stockEntrySupplier').value;
-            
-            const products = getProducts();
-            const product = products.find(function(p) { return p.id == productId; });
-            
-            if (!product) {
-                showAlert('Produto não encontrado!', 'danger');
-                return;
-            }
-            
-            // Atualizar stock do produto
-            product.stock += quantity;
-            
-            if (unitCost > 0 && product.cost === 0) {
-                product.cost = unitCost;
-            }
-            
-            saveProducts(products);
-            
-            // Registrar movimentação
-            const movement = {
-                id: nextMovementId,
-                product_id: productId,
-                product_name: product.name,
-                type: 'entrada',
-                quantity: quantity,
-                unit_cost: unitCost,
-                total_cost: quantity * unitCost,
-                supplier_id: supplierId,
-                supplier_name: '',
-                date: new Date().toISOString().split('T')[0],
-                responsible: document.getElementById('currentUserName').textContent,
-                notes: document.getElementById('stockEntryNotes').value
-            };
-            
-            // Obter nome do fornecedor
-            if (supplierId) {
-                const suppliers = getSuppliers();
-                const supplier = suppliers.find(function(s) { return s.id == supplierId; });
-                if (supplier) {
-                    movement.supplier_name = supplier.name;
-                }
-            }
-            
-            const movements = getStockMovements();
-            movements.push(movement);
-            saveStockMovements(movements);
-            saveNextId('stock_movement', nextMovementId + 1);
-            
-            // Atualizar dados financeiros
-            const financial = getFinancial();
-            financial.monthly_expenses += movement.total_cost;
-            financial.current_balance -= movement.total_cost;
-            financial.monthly_profit = financial.monthly_income - financial.monthly_expenses;
-            saveFinancial(financial);
-            
-            updateDashboard();
-            updateProductsTable();
-            updateStockPage();
-            closeModal('stockEntryModal');
-            
-            showAlert('Entrada de ' + quantity + ' unidades de ' + product.name + ' registada com sucesso!', 'success');
-        });
-        
-        // Formulário saída de stock
-        document.getElementById('stockOutputForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const nextMovementId = getNextId('stock_movement');
-            const productId = document.getElementById('stockOutputProduct').value;
-            const quantity = parseInt(document.getElementById('stockOutputQuantity').value);
-            const reason = document.getElementById('stockOutputReason').value;
-            const clientId = document.getElementById('stockOutputClient').value;
-            
-            const products = getProducts();
-            const product = products.find(function(p) { return p.id == productId; });
-            
-            if (!product) {
-                showAlert('Produto não encontrado!', 'danger');
-                return;
-            }
-            
-            if (product.stock < quantity) {
-                showAlert('Stock insuficiente! Disponível: ' + product.stock + ' unidades', 'danger');
-                return;
-            }
-            
-            // Atualizar stock do produto
-            product.stock -= quantity;
-            saveProducts(products);
-            
-            // Registrar movimentação
-            const movement = {
-                id: nextMovementId,
-                product_id: productId,
-                product_name: product.name,
-                type: 'saida',
-                quantity: quantity,
-                reason: reason,
-                client_id: clientId,
-                client_name: '',
-                date: new Date().toISOString().split('T')[0],
-                responsible: document.getElementById('currentUserName').textContent,
-                notes: document.getElementById('stockOutputNotes').value
-            };
-            
-            // Obter nome do cliente
-            if (clientId) {
-                const clients = getClients();
-                const client = clients.find(function(c) { return c.id == clientId; });
-                if (client) {
-                    movement.client_name = client.name;
-                }
-            }
-            
-            const movements = getStockMovements();
-            movements.push(movement);
-            saveStockMovements(movements);
-            saveNextId('stock_movement', nextMovementId + 1);
-            
-            updateDashboard();
-            updateProductsTable();
-            updateStockPage();
-            closeModal('stockOutputModal');
-            
-            showAlert('Saída de ' + quantity + ' unidades de ' + product.name + ' registada com sucesso!', 'success');
-        });
-        
-        // Botão ajuda
-        document.getElementById('helpBtn').addEventListener('click', function() {
-            document.querySelectorAll('.menu-item').forEach(function(i) {
-                i.classList.remove('active');
+            // Botão repor stock
+            document.getElementById('reporStockBtn').addEventListener('click', function() {
+                initStockEntryModal();
+                showModal('stockEntryModal');
             });
-            document.querySelector('[data-page="suporte"]').classList.add('active');
             
-            document.querySelectorAll('.page-content').forEach(function(p) {
-                p.style.display = 'none';
+            // Botões de stock
+            document.getElementById('novaEntradaBtn').addEventListener('click', function() {
+                initStockEntryModal();
+                showModal('stockEntryModal');
             });
-            document.getElementById('suportePage').style.display = 'block';
             
-            document.getElementById('pageTitle').textContent = 'Suporte';
-            document.getElementById('pageSubtitle').textContent = 'Ajuda e suporte técnico';
+            document.getElementById('novaSaidaBtn').addEventListener('click', function() {
+                initStockOutputModal();
+                showModal('stockOutputModal');
+            });
+            
+            // Formulário entrada de stock
+            document.getElementById('stockEntryForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const nextMovementId = getNextId('stock_movement');
+                const productId = document.getElementById('stockEntryProduct').value;
+                const quantity = parseInt(document.getElementById('stockEntryQuantity').value);
+                const unitCost = parseFloat(document.getElementById('stockEntryUnitCost').value) || 0;
+                const supplierId = document.getElementById('stockEntrySupplier').value;
+                
+                const products = getProducts();
+                const product = products.find(p => p.id == productId);
+                
+                if (!product) {
+                    showAlert('Produto não encontrado!', 'danger');
+                    return;
+                }
+                
+                // Atualizar stock do produto
+                product.stock += quantity;
+                
+                if (unitCost > 0 && product.cost === 0) {
+                    product.cost = unitCost;
+                }
+                
+                saveProducts(products);
+                
+                // Registrar movimentação
+                const movement = {
+                    id: nextMovementId,
+                    product_id: productId,
+                    product_name: product.name,
+                    type: 'entrada',
+                    quantity: quantity,
+                    unit_cost: unitCost,
+                    total_cost: quantity * unitCost,
+                    supplier_id: supplierId,
+                    supplier_name: '',
+                    date: new Date().toISOString().split('T')[0],
+                    responsible: document.getElementById('currentUserName').textContent,
+                    notes: document.getElementById('stockEntryNotes').value
+                };
+                
+                // Obter nome do fornecedor
+                if (supplierId) {
+                    const suppliers = getSuppliers();
+                    const supplier = suppliers.find(s => s.id == supplierId);
+                    if (supplier) {
+                        movement.supplier_name = supplier.name;
+                    }
+                }
+                
+                const movements = getStockMovements();
+                movements.push(movement);
+                saveStockMovements(movements);
+                saveNextId('stock_movement', nextMovementId + 1);
+                
+                // Atualizar dados financeiros
+                const financial = getFinancial();
+                financial.monthly_expenses += movement.total_cost;
+                financial.current_balance -= movement.total_cost;
+                financial.monthly_profit = financial.monthly_income - financial.monthly_expenses;
+                saveFinancial(financial);
+                
+                updateDashboard();
+                updateProductsTable();
+                updateStockPage();
+                closeModal('stockEntryModal');
+                
+                showAlert(`Entrada de ${quantity} unidades de ${product.name} registada com sucesso!`, 'success');
+            });
+            
+            // Formulário saída de stock
+            document.getElementById('stockOutputForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const nextMovementId = getNextId('stock_movement');
+                const productId = document.getElementById('stockOutputProduct').value;
+                const quantity = parseInt(document.getElementById('stockOutputQuantity').value);
+                const reason = document.getElementById('stockOutputReason').value;
+                const clientId = document.getElementById('stockOutputClient').value;
+                
+                const products = getProducts();
+                const product = products.find(p => p.id == productId);
+                
+                if (!product) {
+                    showAlert('Produto não encontrado!', 'danger');
+                    return;
+                }
+                
+                if (product.stock < quantity) {
+                    showAlert(`Stock insuficiente! Disponível: ${product.stock} unidades`, 'danger');
+                    return;
+                }
+                
+                // Atualizar stock do produto
+                product.stock -= quantity;
+                saveProducts(products);
+                
+                // Registrar movimentação
+                const movement = {
+                    id: nextMovementId,
+                    product_id: productId,
+                    product_name: product.name,
+                    type: 'saida',
+                    quantity: quantity,
+                    reason: reason,
+                    client_id: clientId,
+                    client_name: '',
+                    date: new Date().toISOString().split('T')[0],
+                    responsible: document.getElementById('currentUserName').textContent,
+                    notes: document.getElementById('stockOutputNotes').value
+                };
+                
+                // Obter nome do cliente
+                if (clientId) {
+                    const clients = getClients();
+                    const client = clients.find(c => c.id == clientId);
+                    if (client) {
+                        movement.client_name = client.name;
+                    }
+                }
+                
+                const movements = getStockMovements();
+                movements.push(movement);
+                saveStockMovements(movements);
+                saveNextId('stock_movement', nextMovementId + 1);
+                
+                updateDashboard();
+                updateProductsTable();
+                updateStockPage();
+                closeModal('stockOutputModal');
+                
+                showAlert(`Saída de ${quantity} unidades de ${product.name} registada com sucesso!`, 'success');
+            });
+            
+            // Botão ajuda
+            document.getElementById('helpBtn').addEventListener('click', function() {
+                document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+                document.querySelector('[data-page="suporte"]').classList.add('active');
+                
+                document.querySelectorAll('.page-content').forEach(p => p.style.display = 'none');
+                document.getElementById('suportePage').style.display = 'block';
+                
+                document.getElementById('pageTitle').textContent = 'Suporte';
+                document.getElementById('pageSubtitle').textContent = 'Ajuda e suporte técnico';
+            });
         });
         
         // Função para adicionar produto à venda
@@ -6456,9 +6460,7 @@
             }
             
             // Verificar se produto já está na venda
-            const existingItemIndex = window.currentSaleItems.findIndex(function(item) {
-                return item.id === product.id;
-            });
+            const existingItemIndex = window.currentSaleItems.findIndex(item => item.id === product.id);
             
             if (existingItemIndex > -1) {
                 // Aumentar quantidade
@@ -6481,33 +6483,27 @@
         // Função para atualizar lista de itens da venda
         function updateSaleItemsList() {
             const saleItemsList = document.getElementById('saleItemsList');
-            if (!saleItemsList) return;
-            
             saleItemsList.innerHTML = '';
             
-            if (!window.currentSaleItems || window.currentSaleItems.length === 0) {
-                saleItemsList.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: #666;">Nenhum item adicionado à venda</td></tr>';
-                return;
-            }
-            
-            window.currentSaleItems.forEach(function(item, index) {
+            window.currentSaleItems.forEach((item, index) => {
                 const row = document.createElement('tr');
-                row.innerHTML = 
-                    '<td>' + item.name + '</td>' +
-                    '<td>' +
-                        '<div style="display: flex; align-items: center; gap: 5px;">' +
-                            '<button class="btn btn-sm btn-outline" onclick="changeItemQuantity(' + index + ', -1)" style="padding: 2px 8px;">-</button>' +
-                            '<input type="number" value="' + item.quantity + '" min="1" style="width: 60px; text-align: center;" onchange="updateItemQuantity(' + index + ', this.value)">' +
-                            '<button class="btn btn-sm btn-outline" onclick="changeItemQuantity(' + index + ', 1)" style="padding: 2px 8px;">+</button>' +
-                        '</div>' +
-                    '</td>' +
-                    '<td>' + item.price.toFixed(2) + ' MZN</td>' +
-                    '<td>' + (item.price * item.quantity).toFixed(2) + ' MZN</td>' +
-                    '<td>' +
-                        '<button class="btn btn-sm btn-danger" onclick="removeSaleItem(' + index + ')" style="padding: 2px 8px;">' +
-                            '<i class="fas fa-trash"></i>' +
-                        '</button>' +
-                    '</td>';
+                row.innerHTML = `
+                    <td>${item.name}</td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <button class="btn btn-sm btn-outline" onclick="changeItemQuantity(${index}, -1)" style="padding: 2px 8px;">-</button>
+                            <input type="number" value="${item.quantity}" min="1" style="width: 60px; text-align: center;" onchange="updateItemQuantity(${index}, this.value)">
+                            <button class="btn btn-sm btn-outline" onclick="changeItemQuantity(${index}, 1)" style="padding: 2px 8px;">+</button>
+                        </div>
+                    </td>
+                    <td>${item.price.toFixed(2)} MZN</td>
+                    <td>${(item.price * item.quantity).toFixed(2)} MZN</td>
+                    <td>
+                        <button class="btn btn-sm btn-danger" onclick="removeSaleItem(${index})" style="padding: 2px 8px;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
                 saleItemsList.appendChild(row);
             });
         }
@@ -6518,10 +6514,7 @@
                 window.currentSaleItems = [];
             }
             
-            const subtotal = window.currentSaleItems.reduce(function(sum, item) {
-                return sum + (item.price * item.quantity);
-            }, 0);
-            
+            const subtotal = window.currentSaleItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
             const taxRate = parseFloat(getSettings().tax_rate) || 17;
             const discount = 0; // Poderia ser calculado com base em promoções
             const tax = (subtotal - discount) * (taxRate / 100);
@@ -6580,17 +6573,14 @@
             const paymentMethod = document.getElementById('salePaymentMethod').value;
             const amountReceived = parseFloat(document.getElementById('saleAmountReceived').value) || 0;
             
-            const subtotal = window.currentSaleItems.reduce(function(sum, item) {
-                return sum + (item.price * item.quantity);
-            }, 0);
-            
+            const subtotal = window.currentSaleItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
             const taxRate = parseFloat(getSettings().tax_rate) || 17;
             const discount = 0;
             const tax = (subtotal - discount) * (taxRate / 100);
             const total = (subtotal - discount) + tax;
             
             if (amountReceived < total) {
-                showAlert('Valor recebido insuficiente! Total: ' + total.toFixed(2) + ' MZN', 'danger');
+                showAlert(`Valor recebido insuficiente! Total: ${total.toFixed(2)} MZN`, 'danger');
                 return;
             }
             
@@ -6601,7 +6591,7 @@
             let clientName = 'Cliente Avulso';
             if (clientId) {
                 const clients = getClients();
-                const client = clients.find(function(c) { return c.id == clientId; });
+                const client = clients.find(c => c.id == clientId);
                 if (client) {
                     clientName = client.name;
                     
@@ -6618,15 +6608,13 @@
                 receipt_no: 'REC' + nextSaleId.toString().padStart(3, '0'),
                 client_id: clientId || null,
                 client_name: clientName,
-                items: window.currentSaleItems.map(function(item) {
-                    return {
-                        product_id: item.id,
-                        name: item.name,
-                        quantity: item.quantity,
-                        price: item.price,
-                        total: item.price * item.quantity
-                    };
-                }),
+                items: window.currentSaleItems.map(item => ({
+                    product_id: item.id,
+                    name: item.name,
+                    quantity: item.quantity,
+                    price: item.price,
+                    total: item.price * item.quantity
+                })),
                 subtotal: subtotal,
                 discount: discount,
                 tax: tax,
@@ -6636,13 +6624,13 @@
                 change: amountReceived - total,
                 date: new Date().toISOString().split('T')[0],
                 time: new Date().toTimeString().split(' ')[0].substring(0, 5),
-                seller: document.getElementById('currentUserName').textContent || 'Sistema'
+                seller: document.getElementById('currentUserName').textContent
             };
             
             // Atualizar stock dos produtos
             const products = getProducts();
-            window.currentSaleItems.forEach(function(saleItem) {
-                const product = products.find(function(p) { return p.id === saleItem.id; });
+            window.currentSaleItems.forEach(saleItem => {
+                const product = products.find(p => p.id === saleItem.id);
                 if (product) {
                     product.stock -= saleItem.quantity;
                     if (product.stock < 0) product.stock = 0;
@@ -6654,11 +6642,11 @@
             const nextMovementId = getNextId('stock_movement');
             const movements = getStockMovements();
             
-            window.currentSaleItems.forEach(function(saleItem, index) {
-                const product = products.find(function(p) { return p.id === saleItem.id; });
+            window.currentSaleItems.forEach(saleItem => {
+                const product = products.find(p => p.id === saleItem.id);
                 if (product) {
                     const movement = {
-                        id: nextMovementId + index,
+                        id: nextMovementId + window.currentSaleItems.indexOf(saleItem),
                         product_id: saleItem.id,
                         product_name: product.name,
                         type: 'saida',
@@ -6668,12 +6656,11 @@
                         client_name: clientName,
                         date: sale.date,
                         responsible: sale.seller,
-                        notes: 'Venda ' + sale.receipt_no
+                        notes: `Venda ${sale.receipt_no}`
                     };
                     movements.push(movement);
                 }
             });
-            
             saveStockMovements(movements);
             saveNextId('stock_movement', nextMovementId + window.currentSaleItems.length);
             
@@ -6710,89 +6697,88 @@
             // Gerar recibo
             generateReceipt(sale);
             
-            showAlert('Venda ' + sale.receipt_no + ' concluída com sucesso! Total: ' + total.toFixed(2) + ' MZN', 'success');
+            showAlert(`Venda ${sale.receipt_no} concluída com sucesso! Total: ${total.toFixed(2)} MZN`, 'success');
         }
         
         // Função para gerar recibo
         function generateReceipt(sale) {
             const settings = getSettings();
             
-            let receiptContent = '';
-            receiptContent += '<html>';
-            receiptContent += '<head>';
-            receiptContent += '<title>Recibo ' + sale.receipt_no + '</title>';
-            receiptContent += '<style>';
-            receiptContent += 'body { font-family: Arial, sans-serif; padding: 20px; max-width: 400px; margin: 0 auto; }';
-            receiptContent += '.header { text-align: center; margin-bottom: 20px; }';
-            receiptContent += '.company-name { font-size: 24px; font-weight: bold; color: #1a5f7a; }';
-            receiptContent += '.receipt-info { margin-bottom: 20px; }';
-            receiptContent += '.items-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }';
-            receiptContent += '.items-table th, .items-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }';
-            receiptContent += '.items-table th { background-color: #f2f2f2; }';
-            receiptContent += '.total { font-size: 18px; font-weight: bold; text-align: right; }';
-            receiptContent += '.footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; }';
-            receiptContent += '</style>';
-            receiptContent += '</head>';
-            receiptContent += '<body>';
+            let receiptContent = `
+                <html>
+                <head>
+                    <title>Recibo ${sale.receipt_no}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 20px; max-width: 400px; margin: 0 auto; }
+                        .header { text-align: center; margin-bottom: 20px; }
+                        .company-name { font-size: 24px; font-weight: bold; color: #1a5f7a; }
+                        .receipt-info { margin-bottom: 20px; }
+                        .items-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                        .items-table th, .items-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                        .items-table th { background-color: #f2f2f2; }
+                        .total { font-size: 18px; font-weight: bold; text-align: right; }
+                        .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <div class="company-name">${settings.company_name || 'Bizz Flow CRM'}</div>
+                        <div>${settings.company_address || ''}</div>
+                        <div>NIF: ${settings.company_nif || ''} | Tel: ${settings.company_phone || ''}</div>
+                    </div>
+                    
+                    <div class="receipt-info">
+                        <div><strong>RECIBO:</strong> ${sale.receipt_no}</div>
+                        <div><strong>DATA:</strong> ${sale.date} ${sale.time}</div>
+                        <div><strong>CLIENTE:</strong> ${sale.client_name}</div>
+                        <div><strong>ATENDENTE:</strong> ${sale.seller}</div>
+                    </div>
+                    
+                    <table class="items-table">
+                        <thead>
+                            <tr>
+                                <th>Produto</th>
+                                <th>Qtd</th>
+                                <th>Preço</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
             
-            receiptContent += '<div class="header">';
-            receiptContent += '<div class="company-name">' + (settings.company_name || 'Bizz Flow CRM') + '</div>';
-            receiptContent += '<div>' + (settings.company_address || '') + '</div>';
-            receiptContent += '<div>NIF: ' + (settings.company_nif || '') + ' | Tel: ' + (settings.company_phone || '') + '</div>';
-            receiptContent += '</div>';
-            
-            receiptContent += '<div class="receipt-info">';
-            receiptContent += '<div><strong>RECIBO:</strong> ' + sale.receipt_no + '</div>';
-            receiptContent += '<div><strong>DATA:</strong> ' + sale.date + ' ' + sale.time + '</div>';
-            receiptContent += '<div><strong>CLIENTE:</strong> ' + sale.client_name + '</div>';
-            receiptContent += '<div><strong>ATENDENTE:</strong> ' + sale.seller + '</div>';
-            receiptContent += '</div>';
-            
-            receiptContent += '<table class="items-table">';
-            receiptContent += '<thead>';
-            receiptContent += '<tr>';
-            receiptContent += '<th>Produto</th>';
-            receiptContent += '<th>Qtd</th>';
-            receiptContent += '<th>Preço</th>';
-            receiptContent += '<th>Total</th>';
-            receiptContent += '</tr>';
-            receiptContent += '</thead>';
-            receiptContent += '<tbody>';
-            
-            sale.items.forEach(function(item) {
-                receiptContent += '<tr>';
-                receiptContent += '<td>' + item.name + '</td>';
-                receiptContent += '<td>' + item.quantity + '</td>';
-                receiptContent += '<td>' + item.price.toFixed(2) + ' MZN</td>';
-                receiptContent += '<td>' + item.total.toFixed(2) + ' MZN</td>';
-                receiptContent += '</tr>';
+            sale.items.forEach(item => {
+                receiptContent += `
+                    <tr>
+                        <td>${item.name}</td>
+                        <td>${item.quantity}</td>
+                        <td>${item.price.toFixed(2)} MZN</td>
+                        <td>${item.total.toFixed(2)} MZN</td>
+                    </tr>
+                `;
             });
             
-            receiptContent += '</tbody>';
-            receiptContent += '</table>';
-            
-            receiptContent += '<div style="text-align: right;">';
-            receiptContent += '<div>Subtotal: ' + sale.subtotal.toFixed(2) + ' MZN</div>';
-            
-            if (sale.discount > 0) {
-                receiptContent += '<div>Desconto: -' + sale.discount.toFixed(2) + ' MZN</div>';
-            }
-            
-            receiptContent += '<div>IVA (' + (getSettings().tax_rate || 17) + '%): ' + sale.tax.toFixed(2) + ' MZN</div>';
-            receiptContent += '<div class="total">TOTAL: ' + sale.total.toFixed(2) + ' MZN</div>';
-            receiptContent += '<div>Recebido: ' + sale.amount_received.toFixed(2) + ' MZN</div>';
-            receiptContent += '<div>Troco: ' + sale.change.toFixed(2) + ' MZN</div>';
-            receiptContent += '<div>Forma de Pagamento: ' + sale.payment_method + '</div>';
-            receiptContent += '</div>';
-            
-            receiptContent += '<div class="footer">';
-            receiptContent += (settings.invoice_footer || 'Obrigado pela sua preferência!');
-            receiptContent += '<br><br>';
-            receiptContent += 'Este documento foi gerado electronicamente pelo Bizz Flow CRM';
-            receiptContent += '</div>';
-            
-            receiptContent += '</body>';
-            receiptContent += '</html>';
+            receiptContent += `
+                        </tbody>
+                    </table>
+                    
+                    <div style="text-align: right;">
+                        <div>Subtotal: ${sale.subtotal.toFixed(2)} MZN</div>
+                        ${sale.discount > 0 ? `<div>Desconto: -${sale.discount.toFixed(2)} MZN</div>` : ''}
+                        <div>IVA (${getSettings().tax_rate || 17}%): ${sale.tax.toFixed(2)} MZN</div>
+                        <div class="total">TOTAL: ${sale.total.toFixed(2)} MZN</div>
+                        <div>Recebido: ${sale.amount_received.toFixed(2)} MZN</div>
+                        <div>Troco: ${sale.change.toFixed(2)} MZN</div>
+                        <div>Forma de Pagamento: ${sale.payment_method}</div>
+                    </div>
+                    
+                    <div class="footer">
+                        ${settings.invoice_footer || 'Obrigado pela sua preferência!'}
+                        <br><br>
+                        Este documento foi gerado electronicamente pelo Bizz Flow CRM
+                    </div>
+                </body>
+                </html>
+            `;
             
             // Abrir recibo em nova janela para impressão
             const printWindow = window.open('', '_blank');
@@ -6808,104 +6794,104 @@
         // Função para ver detalhes da venda
         function viewSale(saleId) {
             const sales = getSales();
-            const sale = sales.find(function(s) { return s.id === saleId; });
+            const sale = sales.find(s => s.id === saleId);
             
             if (!sale) {
                 showAlert('Venda não encontrada!', 'danger');
                 return;
             }
             
-            let saleDetails = '';
-            saleDetails += '<div style="padding: 20px;">';
-            saleDetails += '<div style="display: flex; justify-content: space-between; margin-bottom: 20px;">';
-            saleDetails += '<div>';
-            saleDetails += '<h3 style="color: var(--bizzflow-primary); margin-bottom: 5px;">Recibo ' + sale.receipt_no + '</h3>';
-            saleDetails += '<p style="color: var(--bizzflow-gray);">' + sale.date + ' ' + sale.time + '</p>';
-            saleDetails += '</div>';
-            saleDetails += '<span class="badge badge-success" style="height: fit-content;">Concluída</span>';
-            saleDetails += '</div>';
+            let saleDetails = `
+                <div style="padding: 20px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                        <div>
+                            <h3 style="color: var(--bizzflow-primary); margin-bottom: 5px;">Recibo ${sale.receipt_no}</h3>
+                            <p style="color: var(--bizzflow-gray);">${sale.date} ${sale.time}</p>
+                        </div>
+                        <span class="badge badge-success" style="height: fit-content;">Concluída</span>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span>Cliente:</span>
+                            <span style="font-weight: 600;">${sale.client_name}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span>Atendente:</span>
+                            <span>${sale.seller}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>Forma de Pagamento:</span>
+                            <span>${sale.payment_method}</span>
+                        </div>
+                    </div>
+                    
+                    <h4 style="margin-bottom: 15px; color: var(--bizzflow-dark);">Itens da Venda</h4>
+                    <div class="table-container">
+                        <table style="min-width: auto;">
+                            <thead>
+                                <tr>
+                                    <th>Produto</th>
+                                    <th>Qtd</th>
+                                    <th>Preço Unit.</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+            `;
             
-            saleDetails += '<div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 20px;">';
-            saleDetails += '<div style="display: flex; justify-content: space-between; margin-bottom: 5px;">';
-            saleDetails += '<span>Cliente:</span>';
-            saleDetails += '<span style="font-weight: 600;">' + sale.client_name + '</span>';
-            saleDetails += '</div>';
-            saleDetails += '<div style="display: flex; justify-content: space-between; margin-bottom: 5px;">';
-            saleDetails += '<span>Atendente:</span>';
-            saleDetails += '<span>' + sale.seller + '</span>';
-            saleDetails += '</div>';
-            saleDetails += '<div style="display: flex; justify-content: space-between;">';
-            saleDetails += '<span>Forma de Pagamento:</span>';
-            saleDetails += '<span>' + sale.payment_method + '</span>';
-            saleDetails += '</div>';
-            saleDetails += '</div>';
-            
-            saleDetails += '<h4 style="margin-bottom: 15px; color: var(--bizzflow-dark);">Itens da Venda</h4>';
-            saleDetails += '<div class="table-container">';
-            saleDetails += '<table style="min-width: auto;">';
-            saleDetails += '<thead>';
-            saleDetails += '<tr>';
-            saleDetails += '<th>Produto</th>';
-            saleDetails += '<th>Qtd</th>';
-            saleDetails += '<th>Preço Unit.</th>';
-            saleDetails += '<th>Total</th>';
-            saleDetails += '</tr>';
-            saleDetails += '</thead>';
-            saleDetails += '<tbody>';
-            
-            sale.items.forEach(function(item) {
-                saleDetails += '<tr>';
-                saleDetails += '<td>' + item.name + '</td>';
-                saleDetails += '<td>' + item.quantity + '</td>';
-                saleDetails += '<td>' + item.price.toFixed(2) + ' MZN</td>';
-                saleDetails += '<td>' + item.total.toFixed(2) + ' MZN</td>';
-                saleDetails += '</tr>';
+            sale.items.forEach(item => {
+                saleDetails += `
+                    <tr>
+                        <td>${item.name}</td>
+                        <td>${item.quantity}</td>
+                        <td>${item.price.toFixed(2)} MZN</td>
+                        <td>${item.total.toFixed(2)} MZN</td>
+                    </tr>
+                `;
             });
             
-            saleDetails += '</tbody>';
-            saleDetails += '</table>';
-            saleDetails += '</div>';
-            
-            saleDetails += '<div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-top: 20px;">';
-            saleDetails += '<div style="display: flex; justify-content: space-between; margin-bottom: 10px;">';
-            saleDetails += '<span>Subtotal:</span>';
-            saleDetails += '<span>' + sale.subtotal.toFixed(2) + ' MZN</span>';
-            saleDetails += '</div>';
-            
-            if (sale.discount > 0) {
-                saleDetails += '<div style="display: flex; justify-content: space-between; margin-bottom: 10px;">';
-                saleDetails += '<span>Desconto:</span>';
-                saleDetails += '<span>- ' + sale.discount.toFixed(2) + ' MZN</span>';
-                saleDetails += '</div>';
-            }
-            
-            saleDetails += '<div style="display: flex; justify-content: space-between; margin-bottom: 10px;">';
-            saleDetails += '<span>IVA:</span>';
-            saleDetails += '<span>' + sale.tax.toFixed(2) + ' MZN</span>';
-            saleDetails += '</div>';
-            
-            saleDetails += '<div style="display: flex; justify-content: space-between; font-size: 1.3rem; font-weight: bold; padding-top: 10px; border-top: 1px solid #ddd;">';
-            saleDetails += '<span>Total:</span>';
-            saleDetails += '<span>' + sale.total.toFixed(2) + ' MZN</span>';
-            saleDetails += '</div>';
-            
-            saleDetails += '<div style="display: flex; justify-content: space-between; margin-top: 10px;">';
-            saleDetails += '<span>Valor Recebido:</span>';
-            saleDetails += '<span>' + sale.amount_received.toFixed(2) + ' MZN</span>';
-            saleDetails += '</div>';
-            
-            saleDetails += '<div style="display: flex; justify-content: space-between; margin-top: 5px;">';
-            saleDetails += '<span>Troco:</span>';
-            saleDetails += '<span style="color: #27ae60; font-weight: 600;">' + sale.change.toFixed(2) + ' MZN</span>';
-            saleDetails += '</div>';
-            saleDetails += '</div>';
-            
-            saleDetails += '<div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">';
-            saleDetails += '<button class="btn btn-primary" onclick="generateReceipt(' + saleId + ')">';
-            saleDetails += '<i class="fas fa-print"></i> Imprimir Recibo';
-            saleDetails += '</button>';
-            saleDetails += '</div>';
-            saleDetails += '</div>';
+            saleDetails += `
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-top: 20px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span>Subtotal:</span>
+                            <span>${sale.subtotal.toFixed(2)} MZN</span>
+                        </div>
+                        ${sale.discount > 0 ? `
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span>Desconto:</span>
+                            <span>-${sale.discount.toFixed(2)} MZN</span>
+                        </div>
+                        ` : ''}
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span>IVA:</span>
+                            <span>${sale.tax.toFixed(2)} MZN</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 1.3rem; font-weight: bold; padding-top: 10px; border-top: 1px solid #ddd;">
+                            <span>Total:</span>
+                            <span>${sale.total.toFixed(2)} MZN</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+                            <span>Valor Recebido:</span>
+                            <span>${sale.amount_received.toFixed(2)} MZN</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-top: 5px;">
+                            <span>Troco:</span>
+                            <span style="color: #27ae60; font-weight: 600;">${sale.change.toFixed(2)} MZN</span>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                        <button class="btn btn-primary" onclick="generateReceipt(${JSON.stringify(sale).replace(/"/g, '&quot;')})">
+                            <i class="fas fa-print"></i> Imprimir Recibo
+                        </button>
+                    </div>
+                </div>
+            `;
             
             document.getElementById('saleDetailsContent').innerHTML = saleDetails;
             showModal('viewSaleModal');
@@ -6914,7 +6900,7 @@
         // Funções de edição/exclusão
         function editClient(clientId) {
             const clients = getClients();
-            const client = clients.find(function(c) { return c.id === clientId; });
+            const client = clients.find(c => c.id === clientId);
             
             if (client) {
                 document.getElementById('clientName').value = client.name;
@@ -6958,7 +6944,7 @@
         function deleteClient(clientId) {
             if (confirm('Tem certeza que deseja excluir este cliente?')) {
                 const clients = getClients();
-                const filteredClients = clients.filter(function(c) { return c.id !== clientId; });
+                const filteredClients = clients.filter(c => c.id !== clientId);
                 saveClients(filteredClients);
                 
                 updateDashboard();
@@ -6970,7 +6956,7 @@
         
         function editProduct(productId) {
             const products = getProducts();
-            const product = products.find(function(p) { return p.id === productId; });
+            const product = products.find(p => p.id === productId);
             
             if (product) {
                 document.getElementById('productCode').value = product.code;
@@ -6987,7 +6973,7 @@
                 const suppliers = getSuppliers();
                 const supplierSelect = document.getElementById('productSupplier');
                 supplierSelect.innerHTML = '<option value="">Selecionar Fornecedor</option>';
-                suppliers.forEach(function(supplier) {
+                suppliers.forEach(supplier => {
                     const option = document.createElement('option');
                     option.value = supplier.id;
                     option.textContent = supplier.name;
@@ -7034,7 +7020,7 @@
         function deleteProduct(productId) {
             if (confirm('Tem certeza que deseja excluir este produto?')) {
                 const products = getProducts();
-                const filteredProducts = products.filter(function(p) { return p.id !== productId; });
+                const filteredProducts = products.filter(p => p.id !== productId);
                 saveProducts(filteredProducts);
                 
                 updateDashboard();
@@ -7048,14 +7034,14 @@
         function deleteSale(saleId) {
             if (confirm('Tem certeza que deseja excluir esta venda?')) {
                 const sales = getSales();
-                const sale = sales.find(function(s) { return s.id === saleId; });
-                const filteredSales = sales.filter(function(s) { return s.id !== saleId; });
+                const sale = sales.find(s => s.id === saleId);
+                const filteredSales = sales.filter(s => s.id !== saleId);
                 
                 if (sale) {
                     // Reverter stock dos produtos
                     const products = getProducts();
-                    sale.items.forEach(function(saleItem) {
-                        const product = products.find(function(p) { return p.id === saleItem.product_id; });
+                    sale.items.forEach(saleItem => {
+                        const product = products.find(p => p.id === saleItem.product_id);
                         if (product) {
                             product.stock += saleItem.quantity;
                         }
@@ -7072,7 +7058,7 @@
                     // Atualizar dados do cliente
                     if (sale.client_id) {
                         const clients = getClients();
-                        const client = clients.find(function(c) { return c.id === sale.client_id; });
+                        const client = clients.find(c => c.id === sale.client_id);
                         if (client) {
                             client.total_purchases -= sale.total;
                             if (client.total_purchases < 0) client.total_purchases = 0;
@@ -7094,7 +7080,7 @@
         
         function editPlan(planId) {
             const plans = getPlans();
-            const plan = plans.find(function(p) { return p.id === planId; });
+            const plan = plans.find(p => p.id === planId);
             
             if (plan) {
                 showAlert('Funcionalidade de edição de planos em desenvolvimento!', 'info');
@@ -7104,7 +7090,7 @@
         function deletePlan(planId) {
             if (confirm('Tem certeza que deseja excluir este plano?')) {
                 const plans = getPlans();
-                const filteredPlans = plans.filter(function(p) { return p.id !== planId; });
+                const filteredPlans = plans.filter(p => p.id !== planId);
                 savePlans(filteredPlans);
                 
                 updatePlans();
@@ -7115,7 +7101,7 @@
         
         function editSubscription(subscriptionId) {
             const subscriptions = getSubscriptions();
-            const subscription = subscriptions.find(function(s) { return s.id === subscriptionId; });
+            const subscription = subscriptions.find(s => s.id === subscriptionId);
             
             if (subscription) {
                 showAlert('Funcionalidade de edição de assinaturas em desenvolvimento!', 'info');
@@ -7125,7 +7111,7 @@
         function deleteSubscription(subscriptionId) {
             if (confirm('Tem certeza que deseja excluir esta assinatura?')) {
                 const subscriptions = getSubscriptions();
-                const filteredSubscriptions = subscriptions.filter(function(s) { return s.id !== subscriptionId; });
+                const filteredSubscriptions = subscriptions.filter(s => s.id !== subscriptionId);
                 saveSubscriptions(filteredSubscriptions);
                 
                 updateDashboard();
@@ -7139,7 +7125,7 @@
         function showAlert(message, type) {
             // Remover alertas existentes
             const existingAlerts = document.querySelectorAll('.alert');
-            existingAlerts.forEach(function(alert) {
+            existingAlerts.forEach(alert => {
                 if (alert.parentNode) {
                     alert.parentNode.removeChild(alert);
                 }
@@ -7147,14 +7133,11 @@
             
             // Criar novo alerta
             const alertDiv = document.createElement('div');
-            alertDiv.className = 'alert alert-' + type;
-            alertDiv.innerHTML = 
-                '<i class="fas fa-' + 
-                (type === 'success' ? 'check-circle' : 
-                 type === 'warning' ? 'exclamation-triangle' : 
-                 type === 'danger' ? 'times-circle' : 'info-circle') + 
-                '"></i>' +
-                '<div>' + message + '</div>';
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : type === 'danger' ? 'times-circle' : 'info-circle'}"></i>
+                <div>${message}</div>
+            `;
             
             // Adicionar ao dashboard
             const dashboardPage = document.getElementById('dashboardPage');
@@ -7169,7 +7152,7 @@
             }
             
             // Remover alerta após 5 segundos
-            setTimeout(function() {
+            setTimeout(() => {
                 if (alertDiv.parentNode) {
                     alertDiv.parentNode.removeChild(alertDiv);
                 }
@@ -7221,112 +7204,55 @@
                 }
             }
             
-            // Criar elementos DOM (sem problemas de escape)
             const resultsDiv = document.getElementById('customReportResults');
-            if (resultsDiv) {
-                resultsDiv.innerHTML = ''; // Limpar
-
-                const container = document.createElement('div');
-                container.style.cssText = 'background: #f8f9fa; padding: 20px; border-radius: 10px;';
-
-                const title = document.createElement('h4');
-                title.style.cssText = 'color: var(--bizzflow-primary); margin-bottom: 15px;';
-                title.textContent = 'Relatório ' + 
-                    (reportType === 'sales' ? 'de Vendas' : 
-                     reportType === 'products' ? 'de Produtos' : 
-                     reportType === 'clients' ? 'de Clientes' : 'Financeiro');
-
-                const period = document.createElement('div');
-                period.style.marginBottom = '15px';
-                period.innerHTML = '<strong>Período:</strong> ' + startDate + ' a ' + endDate;
-
-                const summary = document.createElement('div');
-                summary.style.cssText = 'background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px;';
-                summary.innerHTML = 
-                    '<strong>Resumo:</strong>' +
-                    '<div style="margin-top: 10px;">' +
-                        '<div style="display: flex; justify-content: space-between; margin-bottom: 8px;">' +
-                            '<span>Registos encontrados:</span>' +
-                            '<span style="font-weight: 600;">' + (Math.floor(Math.random() * 100) + 50) + '</span>' +
-                        '</div>' +
-                        '<div style="display: flex; justify-content: space-between; margin-bottom: 8px;">' +
-                            '<span>Total gerado:</span>' +
-                            '<span style="font-weight: 600; color: #27ae60;">' + (Math.random() * 100000).toFixed(2) + ' MZN</span>' +
-                        '</div>' +
-                    '</div>';
-
-                const button = document.createElement('button');
-                button.className = 'btn btn-primary';
-                button.innerHTML = '<i class="fas fa-download"></i> Exportar Relatório';
-                button.onclick = function() {
-                    if (typeof exportData === 'function') {
-                        exportData(reportType, 'pdf');
-                    } else {
-                        console.warn('Função exportData não disponível');
-                        alert('Funcionalidade de exportação em desenvolvimento');
-                    }
-                };
-
-                // Montar
-                container.appendChild(title);
-                container.appendChild(period);
-                container.appendChild(summary);
-                container.appendChild(button);
-                resultsDiv.appendChild(container);
-
-                if (typeof showAlert === 'function') {
-                    showAlert('Relatório gerado com sucesso!', 'success');
-                } else {
-                    console.log('✅ Relatório gerado com sucesso!');
-                }
-            }
-
-            // Mostrar/ocultar datas personalizadas
-            const dateRangeSelect = document.getElementById('dateRange');
-            if (dateRangeSelect) {
-                dateRangeSelect.addEventListener('change', function() {
-                    const customDateRange = document.getElementById('customDateRange');
-                    if (customDateRange) {
-                        customDateRange.style.display = this.value === 'custom' ? 'block' : 'none';
-                    }
-                });
-            }
-
-            // Fechar modais ao clicar fora
-            window.onclick = function(event) {
-                if (event.target.classList.contains('modal')) {
-                    event.target.style.display = 'none';
-                }
-            };
-
-            // Impedir que cliques dentro do conteúdo do modal fechem o modal
-            document.querySelectorAll('.modal-content').forEach(function(content) {
-                content.onclick = function(event) {
-                    event.stopPropagation();
-                };
-            });
-        }
-
-        // ========== FIM DO CÓDIGO JAVASCRIPT ==========
-        console.log('✅ Sistema BizzFlow CRM inicializado com sucesso!');
-        
-        // Inicializar eventos de relatório após carregamento
-        document.addEventListener('DOMContentLoaded', function() {
-            const dateRangeSelect = document.getElementById('dateRange');
-            if (dateRangeSelect) {
-                dateRangeSelect.addEventListener('change', function() {
-                    const customDateRange = document.getElementById('customDateRange');
-                    if (customDateRange) {
-                        customDateRange.style.display = this.value === 'custom' ? 'block' : 'none';
-                    }
-                });
-            }
+            resultsDiv.innerHTML = `
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
+                    <h4 style="color: var(--bizzflow-primary); margin-bottom: 15px;">
+                        Relatório ${reportType === 'sales' ? 'de Vendas' : reportType === 'products' ? 'de Produtos' : reportType === 'clients' ? 'de Clientes' : 'Financeiro'}
+                    </h4>
+                    <div style="margin-bottom: 15px;">
+                        <strong>Período:</strong> ${startDate} a ${endDate}
+                    </div>
+                    <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                        <strong>Resumo:</strong>
+                        <div style="margin-top: 10px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span>Registos encontrados:</span>
+                                <span style="font-weight: 600;">${Math.floor(Math.random() * 100) + 50}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span>Total gerado:</span>
+                                <span style="font-weight: 600; color: #27ae60;">${(Math.random() * 100000).toFixed(2)} MZN</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="exportData('${reportType}', 'pdf')">
+                        <i class="fas fa-download"></i> Exportar Relatório
+                    </button>
+                </div>
+            `;
             
-            // Inicializar botão de gerar relatório
-            const generateReportBtn = document.getElementById('generateReportBtn');
-            if (generateReportBtn) {
-                generateReportBtn.addEventListener('click', generateCustomReport);
+            showAlert('Relatório gerado com sucesso!', 'success');
+        }
+        
+        // Mostrar/ocultar datas personalizadas
+        document.getElementById('dateRange').addEventListener('change', function() {
+            const customDateRange = document.getElementById('customDateRange');
+            customDateRange.style.display = this.value === 'custom' ? 'block' : 'none';
+        });
+        
+        // Fechar modais ao clicar fora
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
             }
+        };
+        
+        // Impedir que cliques dentro do conteúdo do modal fechem o modal
+        document.querySelectorAll('.modal-content').forEach(content => {
+            content.onclick = function(event) {
+                event.stopPropagation();
+            };
         });
     </script>
     <script src="js/functions.js"></script>
