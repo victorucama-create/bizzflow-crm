@@ -1,8 +1,11 @@
+// ==============================================
+// BIZZFLOW BACKEND - SERVER PRINCIPAL
+// ==============================================
 const app = require('./src/app');
 const { pool } = require('./src/config/database');
 require('dotenv').config();
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 10000;
 
 // ========== CONFIGURAÇÃO DE KEEP-ALIVE AUTOMÁTICO ==========
 // Para evitar que o Render.com coloque o servidor para dormir
@@ -16,11 +19,28 @@ const startKeepAlive = () => {
   }
 };
 
-// Verificar conexão com banco de dados
+// ========== ROTA KEEP-ALIVE ==========
+app.get('/keep-alive', (req, res) => {
+  res.json({ 
+    status: 'alive', 
+    timestamp: new Date().toISOString(),
+    service: 'BizzFlow CRM'
+  });
+});
+
+// ========== INICIALIZAÇÃO DO SERVIDOR ==========
+// Testar conexão com banco de dados
 pool.connect((err, client, release) => {
   if (err) {
     console.error('❌ Erro ao conectar ao banco de dados:', err.message);
-    process.exit(1);
+    
+    // Tentar reconexão após 5 segundos
+    setTimeout(() => {
+      console.log('🔄 Tentando reconectar ao banco de dados...');
+      process.exit(1);
+    }, 5000);
+    
+    return;
   }
   
   console.log('✅ Conectado ao PostgreSQL com sucesso!');
@@ -35,6 +55,7 @@ pool.connect((err, client, release) => {
     console.log(`🔗 Local: http://localhost:${PORT}`);
     console.log(`🌐 Produção: https://bizzflow-crm.onrender.com`);
     console.log(`📈 Health check: http://localhost:${PORT}/health`);
+    console.log(`💤 Keep-alive: http://localhost:${PORT}/keep-alive`);
     
     // Iniciar keep-alive
     startKeepAlive();
@@ -89,4 +110,9 @@ process.on('unhandledRejection', (reason, promise) => {
 // Log de inicialização
 console.log('='.repeat(50));
 console.log('🚀 INICIANDO BIZZFLOW CRM BACKEND');
+console.log('='.repeat(50));
+console.log(`🕐 ${new Date().toLocaleString()}`);
+console.log(`🌐 Ambiente: ${process.env.NODE_ENV || 'development'}`);
+console.log(`🗄️  Database URL: ${process.env.DATABASE_URL ? '✓ Configurada' : '✗ Não configurada'}`);
+console.log(`🔐 JWT Secret: ${process.env.JWT_SECRET ? '✓ Configurada' : '✗ Usando padrão'}`);
 console.log('='.repeat(50));
