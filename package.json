@@ -1,6 +1,6 @@
 {
   "name": "bizzflow-crm",
-  "version": "3.0.0",
+  "version": "5.0.0",
   "description": "BizzFlow CRM - Sistema completo de gestão empresarial com PostgreSQL",
   "main": "server.js",
   "scripts": {
@@ -31,8 +31,9 @@
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "helmet": "^7.0.0",
-    "compression": "^1.7.4",
-    "express-rate-limit": "^6.10.0"
+    "multer": "^1.4.5-lts.1",
+    "csv-parser": "^3.0.0",
+    "compression": "^1.7.4"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
