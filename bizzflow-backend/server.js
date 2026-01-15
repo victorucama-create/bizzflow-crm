@@ -1,5 +1,5 @@
 // ==============================================
-// BIZZFLOW BACKEND - SERVER PRINCIPAL CORRIGIDO
+// BIZZFLOW BACKEND - SERVER PRINCIPAL
 // ==============================================
 const app = require('./src/app');
 const { pool } = require('./src/config/database');
@@ -8,10 +8,9 @@ require('dotenv').config();
 const PORT = process.env.PORT || 10000;
 
 // ========== CONFIGURAÇÃO DE KEEP-ALIVE AUTOMÁTICO ==========
-// Para evitar que o Render.com coloque o servidor para dormir
 const startKeepAlive = () => {
   if (process.env.NODE_ENV === 'production') {
-    console.log('🔋 Ativando keep-alive automático...');
+    console.log('🔋 Ativando keep-alive automático (5 minutos)...');
     setInterval(async () => {
       try {
         const response = await fetch(`https://bizzflow-crm.onrender.com/health`);
@@ -20,7 +19,7 @@ const startKeepAlive = () => {
       } catch (err) {
         console.log(`⚠️ Keep-alive falhou: ${err.message}`);
       }
-    }, 5 * 60 * 1000); // A cada 5 minutos (mais frequente)
+    }, 5 * 60 * 1000);
   }
 };
 
@@ -43,10 +42,13 @@ const checkDatabaseConnection = async () => {
 const startServer = async () => {
   try {
     // Verificar conexão com banco
+    console.log('🔍 Verificando conexão com banco de dados...');
     const dbConnected = await checkDatabaseConnection();
+    
     if (!dbConnected) {
       console.log('🔄 Tentando reconexão em 10 segundos...');
       setTimeout(() => {
+        console.log('❌ Falha na conexão. Saindo...');
         process.exit(1);
       }, 10000);
       return;
@@ -59,7 +61,6 @@ const startServer = async () => {
       console.log(`🔗 Local: http://localhost:${PORT}`);
       console.log(`🌐 Produção: https://bizzflow-crm.onrender.com`);
       console.log(`📈 Health check: http://localhost:${PORT}/health`);
-      console.log(`💤 Keep-alive: Ativo (5 minutos)`);
       
       // Iniciar keep-alive
       startKeepAlive();
@@ -77,7 +78,6 @@ const startServer = async () => {
         });
       });
 
-      // Forçar fechamento após 10 segundos
       setTimeout(() => {
         console.error('⏰ Timeout forçando desligamento...');
         process.exit(1);
@@ -91,10 +91,12 @@ const startServer = async () => {
     server.on('error', (error) => {
       console.error('💥 Erro no servidor:', error);
       if (error.code === 'EADDRINUSE') {
-        console.log(`⚠️ Porta ${PORT} já em uso. Tentando porta ${parseInt(PORT) + 1}`);
+        console.log(`⚠️ Porta ${PORT} já em uso.`);
         process.exit(1);
       }
     });
+    
+    console.log('✅ Servidor iniciado com sucesso!');
     
   } catch (error) {
     console.error('❌ Erro ao iniciar servidor:', error);
@@ -106,36 +108,33 @@ const startServer = async () => {
 process.on('uncaughtException', (err) => {
   console.error('💥 ERRO NÃO CAPTURADO:', {
     message: err.message,
-    stack: err.stack,
     timestamp: new Date().toISOString()
   });
   
-  // Não sair imediatamente em produção
   if (process.env.NODE_ENV === 'production') {
-    console.log('🔄 Continuando execução após erro não capturado...');
+    console.log('🔄 Continuando execução...');
   } else {
     process.exit(1);
   }
 });
 
-process.on('unhandledRejection', (reason, promise) => {
+process.on('unhandledRejection', (reason) => {
   console.error('⚠️ PROMISE REJEITADA NÃO TRATADA:', {
     reason: reason?.message || reason,
-    promise,
     timestamp: new Date().toISOString()
   });
 });
 
 // ========== LOG DE INICIALIZAÇÃO ==========
-console.log('='.repeat(50));
+console.log('='.repeat(60));
 console.log('🚀 INICIANDO BIZZFLOW CRM BACKEND');
-console.log('='.repeat(50));
+console.log('='.repeat(60));
 console.log(`🕐 ${new Date().toLocaleString()}`);
 console.log(`🌐 Ambiente: ${process.env.NODE_ENV || 'development'}`);
-console.log(`🗄️  Database URL: ${process.env.DATABASE_URL ? '✓ Configurada' : '✗ Não configurada'}`);
+console.log(`🗄️  Database: ${process.env.DATABASE_URL ? '✓ Configurada' : '✗ Não configurada'}`);
 console.log(`🔐 JWT Secret: ${process.env.JWT_SECRET ? '✓ Configurada' : '✗ Usando padrão'}`);
 console.log(`🚪 Porta: ${PORT}`);
-console.log('='.repeat(50));
+console.log('='.repeat(60));
 
 // Iniciar servidor
 startServer();
