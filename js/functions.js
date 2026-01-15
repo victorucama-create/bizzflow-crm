@@ -1,11 +1,11 @@
 // ==============================================
-// BIZZFLOW CRM - FUNÇÕES COMPLETAS (CORRIGIDAS)
+// BIZZFLOW CRM - FUNÇÕES COMPLETAS (ATUALIZADO)
 // Arquivo: js/functions.js
-// Versão: 2.0.0 (Completa e Corrigida)
+// Versão: 4.0.0 (Completa com Equipa, Fornecedores, Encomendas e Configurações)
 // Data: 2024-01-15
 // ==============================================
 
-console.log('🚀 Inicializando BizzFlow CRM v2.0...');
+console.log('🚀 Inicializando BizzFlow CRM v4.0...');
 
 // Configuração da API
 const API_URL = window.location.hostname.includes('render.com') 
@@ -1613,6 +1613,1028 @@ function useMockDashboardData() {
 }
 
 // ==============================================
+// FUNÇÕES DE FORNECEDORES
+// ==============================================
+
+/**
+ * Abre modal para novo fornecedor
+ */
+function openNewSupplierModal() {
+    console.log('🏭 Abrindo modal de novo fornecedor');
+    
+    const modalHTML = `
+        <div class="modal-overlay" id="newSupplierModal" style="
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        ">
+            <div class="modal-content" style="
+                background: white;
+                border-radius: 12px;
+                padding: 20px;
+                max-width: 500px;
+                width: 90%;
+                max-height: 90vh;
+                overflow-y: auto;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            ">
+                <div class="modal-header" style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 20px;
+                    padding-bottom: 15px;
+                    border-bottom: 1px solid #eee;
+                ">
+                    <h3 style="margin: 0;">🏭 Novo Fornecedor</h3>
+                    <button onclick="closeModal('newSupplierModal')" style="
+                        background: none;
+                        border: none;
+                        font-size: 24px;
+                        cursor: pointer;
+                        color: #666;
+                    ">&times;</button>
+                </div>
+                <form id="newSupplierForm" onsubmit="saveNewSupplier(event)">
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Nome *</label>
+                        <input type="text" id="supplierName" 
+                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" required>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Contato</label>
+                        <input type="text" id="supplierContact"
+                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Email</label>
+                        <input type="email" id="supplierEmail"
+                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Telefone</label>
+                        <input type="tel" id="supplierPhone"
+                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                    </div>
+                    <div style="display: flex; gap: 15px; margin-top: 20px;">
+                        <button type="button" onclick="closeModal('newSupplierModal')" style="
+                            flex: 1;
+                            background: #6c757d;
+                            color: white;
+                            border: none;
+                            padding: 12px;
+                            border-radius: 6px;
+                            cursor: pointer;
+                        ">Cancelar</button>
+                        <button type="submit" style="
+                            flex: 1;
+                            background: #3b82f6;
+                            color: white;
+                            border: none;
+                            padding: 12px;
+                            border-radius: 6px;
+                            cursor: pointer;
+                        ">Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+/**
+ * Salva novo fornecedor
+ */
+async function saveNewSupplier(event) {
+    event.preventDefault();
+    console.log('💾 Salvando novo fornecedor');
+    
+    const supplierData = {
+        name: document.getElementById('supplierName').value.trim(),
+        contact: document.getElementById('supplierContact').value.trim() || null,
+        email: document.getElementById('supplierEmail').value.trim() || null,
+        phone: document.getElementById('supplierPhone').value.trim() || null
+    };
+    
+    if (!supplierData.name) {
+        showNotification('Nome é obrigatório', 'error');
+        return;
+    }
+    
+    showNotification('Salvando fornecedor...', 'info');
+    
+    // Simular salvamento (implementação futura com API)
+    setTimeout(() => {
+        closeModal('newSupplierModal');
+        showNotification('✅ Fornecedor salvo com sucesso!', 'success');
+        
+        // Atualizar lista de fornecedores
+        loadSuppliers();
+    }, 1500);
+}
+
+/**
+ * Carrega lista de fornecedores
+ */
+function loadSuppliers() {
+    console.log('📋 Carregando fornecedores...');
+    
+    // Dados mock para demonstração
+    const mockSuppliers = [
+        { id: 1, name: 'Distribuidora Moçambique', contact: 'João Silva', email: 'vendas@distribuidora.co.mz', phone: '+258841234567' },
+        { id: 2, name: 'Importadora Lusitana', contact: 'Maria Santos', email: 'contato@importadora.pt', phone: '+258842345678' },
+        { id: 3, name: 'Indústrias Clean', contact: 'Carlos Mendes', email: 'industrias@clean.co.mz', phone: '+258843456789' }
+    ];
+    
+    updateSuppliersTable(mockSuppliers);
+}
+
+/**
+ * Atualiza tabela de fornecedores
+ */
+function updateSuppliersTable(suppliers) {
+    const tableElement = document.getElementById('suppliers-table');
+    if (!tableElement) return;
+    
+    const tbody = tableElement.querySelector('tbody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    
+    if (!suppliers || suppliers.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" style="text-align: center; padding: 40px; color: #666;">
+                    <div style="font-size: 48px; opacity: 0.5;">🏭</div>
+                    <p style="margin-top: 10px;">Nenhum fornecedor cadastrado</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    suppliers.forEach(supplier => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${supplier.name}</td>
+            <td>${supplier.contact || 'N/A'}</td>
+            <td>${supplier.email || 'N/A'}</td>
+            <td>${supplier.phone || 'N/A'}</td>
+            <td>
+                <div class="btn-group">
+                    <button class="btn btn-sm btn-outline-primary" onclick="editSupplier(${supplier.id})">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteSupplier(${supplier.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+/**
+ * Edita um fornecedor (placeholder)
+ */
+function editSupplier(supplierId) {
+    console.log('✏️ Editando fornecedor:', supplierId);
+    showNotification('Funcionalidade de editar fornecedor em desenvolvimento', 'info');
+}
+
+/**
+ * Exclui um fornecedor (placeholder)
+ */
+function deleteSupplier(supplierId) {
+    console.log('🗑️ Excluindo fornecedor:', supplierId);
+    if (confirm('Tem certeza que deseja excluir este fornecedor?')) {
+        showNotification('Fornecedor excluído (simulação)', 'success');
+        loadSuppliers();
+    }
+}
+
+// ==============================================
+// FUNÇÕES DE ENCOMENDAS
+// ==============================================
+
+/**
+ * Abre modal para nova encomenda
+ */
+function openNewOrderModal() {
+    console.log('📦 Abrindo modal de nova encomenda');
+    
+    const modalHTML = `
+        <div class="modal-overlay" id="newOrderModal" style="
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        ">
+            <div class="modal-content" style="
+                background: white;
+                border-radius: 12px;
+                padding: 20px;
+                max-width: 600px;
+                width: 90%;
+                max-height: 90vh;
+                overflow-y: auto;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            ">
+                <div class="modal-header" style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 20px;
+                    padding-bottom: 15px;
+                    border-bottom: 1px solid #eee;
+                ">
+                    <h3 style="margin: 0;">📦 Nova Encomenda</h3>
+                    <button onclick="closeModal('newOrderModal')" style="
+                        background: none;
+                        border: none;
+                        font-size: 24px;
+                        cursor: pointer;
+                        color: #666;
+                    ">&times;</button>
+                </div>
+                <form id="newOrderForm" onsubmit="saveNewOrder(event)">
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Fornecedor *</label>
+                        <select id="orderSupplier" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" required>
+                            <option value="">Selecione um fornecedor</option>
+                            <option value="1">Distribuidora Moçambique</option>
+                            <option value="2">Importadora Lusitana</option>
+                            <option value="3">Indústrias Clean</option>
+                        </select>
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Produtos</label>
+                        <div id="orderProductsContainer">
+                            <div class="order-product-item" style="display: flex; gap: 10px; margin-bottom: 10px;">
+                                <select class="order-product-select" style="flex: 2; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <option value="">Selecione produto</option>
+                                    <option value="1">Arroz 5kg</option>
+                                    <option value="2">Azeite 1L</option>
+                                    <option value="3">Detergente</option>
+                                </select>
+                                <input type="number" class="order-quantity" min="1" value="1" placeholder="Qtd" 
+                                       style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <button type="button" onclick="removeOrderProduct(this)" style="
+                                    background: #ef4444;
+                                    color: white;
+                                    border: none;
+                                    padding: 8px 12px;
+                                    border-radius: 4px;
+                                    cursor: pointer;
+                                ">Remover</button>
+                            </div>
+                        </div>
+                        <button type="button" onclick="addOrderProduct()" style="
+                            margin-top: 10px;
+                            background: #3b82f6;
+                            color: white;
+                            border: none;
+                            padding: 8px 15px;
+                            border-radius: 4px;
+                            cursor: pointer;
+                        ">+ Adicionar Produto</button>
+                    </div>
+                    
+                    <div style="display: flex; gap: 15px; margin-top: 20px;">
+                        <button type="button" onclick="closeModal('newOrderModal')" style="
+                            flex: 1;
+                            background: #6c757d;
+                            color: white;
+                            border: none;
+                            padding: 12px;
+                            border-radius: 6px;
+                            cursor: pointer;
+                        ">Cancelar</button>
+                        <button type="submit" style="
+                            flex: 1;
+                            background: #3b82f6;
+                            color: white;
+                            border: none;
+                            padding: 12px;
+                            border-radius: 6px;
+                            cursor: pointer;
+                        ">Criar Encomenda</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+/**
+ * Adiciona campo de produto à encomenda
+ */
+function addOrderProduct() {
+    const container = document.getElementById('orderProductsContainer');
+    if (!container) return;
+    
+    const productHTML = `
+        <div class="order-product-item" style="display: flex; gap: 10px; margin-bottom: 10px;">
+            <select class="order-product-select" style="flex: 2; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                <option value="">Selecione produto</option>
+                <option value="1">Arroz 5kg</option>
+                <option value="2">Azeite 1L</option>
+                <option value="3">Detergente</option>
+            </select>
+            <input type="number" class="order-quantity" min="1" value="1" placeholder="Qtd" 
+                   style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            <button type="button" onclick="removeOrderProduct(this)" style="
+                background: #ef4444;
+                color: white;
+                border: none;
+                padding: 8px 12px;
+                border-radius: 4px;
+                cursor: pointer;
+            ">Remover</button>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', productHTML);
+}
+
+/**
+ * Remove campo de produto
+ */
+function removeOrderProduct(button) {
+    const item = button.closest('.order-product-item');
+    if (item) {
+        item.remove();
+    }
+}
+
+/**
+ * Salva nova encomenda
+ */
+async function saveNewOrder(event) {
+    event.preventDefault();
+    console.log('💾 Salvando nova encomenda');
+    
+    const supplierId = document.getElementById('orderSupplier').value;
+    if (!supplierId) {
+        showNotification('Selecione um fornecedor', 'error');
+        return;
+    }
+    
+    // Coletar produtos
+    const products = [];
+    const productItems = document.querySelectorAll('.order-product-item');
+    
+    productItems.forEach(item => {
+        const productId = item.querySelector('.order-product-select').value;
+        const quantity = item.querySelector('.order-quantity').value;
+        
+        if (productId && quantity > 0) {
+            products.push({
+                product_id: productId,
+                quantity: parseInt(quantity)
+            });
+        }
+    });
+    
+    if (products.length === 0) {
+        showNotification('Adicione pelo menos um produto', 'error');
+        return;
+    }
+    
+    const orderData = {
+        supplier_id: supplierId,
+        products: products,
+        status: 'pending',
+        notes: ''
+    };
+    
+    showNotification('Criando encomenda...', 'info');
+    
+    // Simular salvamento
+    setTimeout(() => {
+        closeModal('newOrderModal');
+        showNotification('✅ Encomenda criada com sucesso!', 'success');
+        
+        // Atualizar lista de encomendas
+        loadOrders();
+    }, 1500);
+}
+
+/**
+ * Carrega lista de encomendas
+ */
+function loadOrders() {
+    console.log('📋 Carregando encomendas...');
+    
+    // Dados mock para demonstração
+    const mockOrders = [
+        { 
+            id: 1, 
+            order_number: 'ENC2024001', 
+            supplier_name: 'Distribuidora Moçambique',
+            total_items: 3,
+            total_value: 1450.00,
+            status: 'pending',
+            order_date: '2024-01-10',
+            expected_date: '2024-01-17'
+        },
+        { 
+            id: 2, 
+            order_number: 'ENC2024002', 
+            supplier_name: 'Importadora Lusitana',
+            total_items: 2,
+            total_value: 950.00,
+            status: 'delivered',
+            order_date: '2024-01-05',
+            expected_date: '2024-01-12'
+        }
+    ];
+    
+    updateOrdersTableEx(mockOrders);
+}
+
+/**
+ * Atualiza tabela de encomendas (não confundir com updateOrdersTable de vendas)
+ */
+function updateOrdersTableEx(orders) {
+    const tableElement = document.getElementById('orders-table');
+    if (!tableElement) return;
+    
+    const tbody = tableElement.querySelector('tbody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    
+    if (!orders || orders.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" style="text-align: center; padding: 40px; color: #666;">
+                    <div style="font-size: 48px; opacity: 0.5;">📦</div>
+                    <p style="margin-top: 10px;">Nenhuma encomenda cadastrada</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    orders.forEach(order => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${order.order_number}</td>
+            <td>${order.supplier_name}</td>
+            <td>${order.total_items}</td>
+            <td>${formatCurrency(order.total_value)}</td>
+            <td>
+                <span class="badge ${order.status === 'delivered' ? 'badge-success' : 
+                                 order.status === 'pending' ? 'badge-warning' : 
+                                 order.status === 'cancelled' ? 'badge-danger' : 'badge-secondary'}">
+                    ${order.status === 'delivered' ? 'Entregue' : 
+                     order.status === 'pending' ? 'Pendente' : 
+                     order.status === 'cancelled' ? 'Cancelada' : order.status}
+                </span>
+            </td>
+            <td>${formatDate(order.order_date)}</td>
+            <td>
+                <div class="btn-group">
+                    <button class="btn btn-sm btn-outline-primary" onclick="viewOrderDetails(${order.id})">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    ${order.status === 'pending' ? `
+                        <button class="btn btn-sm btn-outline-success" onclick="markOrderDelivered(${order.id})">
+                            <i class="fas fa-check"></i>
+                        </button>
+                    ` : ''}
+                </div>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+/**
+ * Visualiza detalhes da encomenda (placeholder)
+ */
+function viewOrderDetails(orderId) {
+    console.log('👁️ Visualizando detalhes da encomenda:', orderId);
+    showNotification('Detalhes da encomenda em desenvolvimento', 'info');
+}
+
+/**
+ * Marca encomenda como entregue (placeholder)
+ */
+function markOrderDelivered(orderId) {
+    console.log('✅ Marcando encomenda como entregue:', orderId);
+    if (confirm('Marcar esta encomenda como entregue?')) {
+        showNotification('Encomenda marcada como entregue', 'success');
+        loadOrders();
+    }
+}
+
+// ==============================================
+// FUNÇÕES DE EQUIPA
+// ==============================================
+
+const Team = {
+    init: function() {
+        console.log('👥 Módulo de equipa inicializado');
+        this.loadTeamMembers();
+        this.setupEventListeners();
+    },
+
+    loadTeamMembers: function() {
+        // Dados mock para demonstração
+        const teamMembers = [
+            { 
+                id: 1, 
+                name: 'Administrador', 
+                email: 'admin@bizzflow.com', 
+                role: 'Administrador', 
+                status: 'active', 
+                last_login: '2024-01-15T11:45:44.456Z',
+                phone: '+258841111111'
+            },
+            { 
+                id: 2, 
+                name: 'João Silva', 
+                email: 'joao@empresa.co.mz', 
+                role: 'Vendedor', 
+                status: 'active', 
+                last_login: '2024-01-14T09:30:22.123Z',
+                phone: '+258842222222'
+            },
+            { 
+                id: 3, 
+                name: 'Maria Santos', 
+                email: 'maria@empresa.co.mz', 
+                role: 'Gestor de Stock', 
+                status: 'active', 
+                last_login: '2024-01-13T14:20:15.789Z',
+                phone: '+258843333333'
+            },
+            { 
+                id: 4, 
+                name: 'Carlos Mendes', 
+                email: 'carlos@empresa.co.mz', 
+                role: 'Vendedor', 
+                status: 'inactive', 
+                last_login: '2024-01-10T08:15:33.456Z',
+                phone: '+258844444444'
+            },
+            { 
+                id: 5, 
+                name: 'Ana Pereira', 
+                email: 'ana@empresa.co.mz', 
+                role: 'Gestor de Clientes', 
+                status: 'active', 
+                last_login: '2024-01-15T10:25:11.789Z',
+                phone: '+258845555555'
+            }
+        ];
+        
+        this.updateTeamTable(teamMembers);
+    },
+
+    updateTeamTable: function(members) {
+        const tableElement = document.getElementById('team-table');
+        if (!tableElement) return;
+        
+        const tbody = tableElement.querySelector('tbody');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        
+        if (!members || members.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 40px; color: #666;">
+                        <div style="font-size: 48px; opacity: 0.5;">👥</div>
+                        <p style="margin-top: 10px;">Nenhum membro da equipa encontrado</p>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        members.forEach(member => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="width: 36px; height: 36px; border-radius: 50%; background: #e0e0e0; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                            ${member.name.charAt(0)}
+                        </div>
+                        <div>
+                            <strong>${member.name}</strong><br>
+                            <small style="color: #666;">${member.email}</small>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <span class="badge ${member.role === 'Administrador' ? 'badge-danger' : 
+                                       member.role === 'Gestor' ? 'badge-info' : 
+                                       member.role === 'Vendedor' ? 'badge-success' : 'badge-secondary'}">
+                        ${member.role}
+                    </span>
+                </td>
+                <td>${member.phone || 'N/A'}</td>
+                <td>
+                    <span class="badge ${member.status === 'active' ? 'badge-success' : 'badge-danger'}">
+                        ${member.status === 'active' ? 'Ativo' : 'Inativo'}
+                    </span>
+                </td>
+                <td>${formatDate(member.last_login)}</td>
+                <td>
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-primary" onclick="Team.editMember(${member.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="Team.deleteMember(${member.id}, '${member.name}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        ${member.status === 'active' ? `
+                            <button class="btn btn-sm btn-outline-warning" onclick="Team.deactivateMember(${member.id})">
+                                <i class="fas fa-user-slash"></i>
+                            </button>
+                        ` : `
+                            <button class="btn btn-sm btn-outline-success" onclick="Team.activateMember(${member.id})">
+                                <i class="fas fa-user-check"></i>
+                            </button>
+                        `}
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    },
+
+    setupEventListeners: function() {
+        // Botão "Novo Membro"
+        const newMemberBtn = document.getElementById('new-member-btn');
+        if (newMemberBtn) {
+            newMemberBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.openNewMemberModal();
+            });
+        }
+    },
+
+    openNewMemberModal: function() {
+        console.log('👤 Abrindo modal de novo membro');
+        
+        const modalHTML = `
+            <div class="modal-overlay" id="newMemberModal" style="
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+            ">
+                <div class="modal-content" style="
+                    background: white;
+                    border-radius: 12px;
+                    padding: 20px;
+                    max-width: 500px;
+                    width: 90%;
+                    max-height: 90vh;
+                    overflow-y: auto;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                ">
+                    <div class="modal-header" style="
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        margin-bottom: 20px;
+                        padding-bottom: 15px;
+                        border-bottom: 1px solid #eee;
+                    ">
+                        <h3 style="margin: 0;">👤 Novo Membro da Equipa</h3>
+                        <button onclick="closeModal('newMemberModal')" style="
+                            background: none;
+                            border: none;
+                            font-size: 24px;
+                            cursor: pointer;
+                            color: #666;
+                        ">&times;</button>
+                    </div>
+                    <form id="newMemberForm" onsubmit="Team.saveNewMember(event)">
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Nome Completo *</label>
+                            <input type="text" id="memberName" 
+                                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" required>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Email *</label>
+                            <input type="email" id="memberEmail"
+                                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" required>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Telefone</label>
+                            <input type="tel" id="memberPhone"
+                                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Cargo *</label>
+                            <select id="memberRole" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" required>
+                                <option value="">Selecione um cargo</option>
+                                <option value="Administrador">Administrador</option>
+                                <option value="Gestor de Stock">Gestor de Stock</option>
+                                <option value="Gestor de Clientes">Gestor de Clientes</option>
+                                <option value="Vendedor">Vendedor</option>
+                                <option value="Suporte">Suporte</option>
+                            </select>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Senha Inicial *</label>
+                            <input type="password" id="memberPassword" 
+                                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" 
+                                   placeholder="Mínimo 6 caracteres" required>
+                        </div>
+                        <div style="display: flex; gap: 15px; margin-top: 20px;">
+                            <button type="button" onclick="closeModal('newMemberModal')" style="
+                                flex: 1;
+                                background: #6c757d;
+                                color: white;
+                                border: none;
+                                padding: 12px;
+                                border-radius: 6px;
+                                cursor: pointer;
+                            ">Cancelar</button>
+                            <button type="submit" style="
+                                flex: 1;
+                                background: #3b82f6;
+                                color: white;
+                                border: none;
+                                padding: 12px;
+                                border-radius: 6px;
+                                cursor: pointer;
+                            ">Adicionar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    },
+
+    saveNewMember: function(event) {
+        event.preventDefault();
+        console.log('💾 Salvando novo membro da equipa');
+        
+        const memberData = {
+            name: document.getElementById('memberName').value.trim(),
+            email: document.getElementById('memberEmail').value.trim(),
+            phone: document.getElementById('memberPhone').value.trim() || null,
+            role: document.getElementById('memberRole').value,
+            password: document.getElementById('memberPassword').value
+        };
+        
+        if (!memberData.name || !memberData.email || !memberData.role || !memberData.password) {
+            showNotification('Preencha todos os campos obrigatórios', 'error');
+            return;
+        }
+        
+        if (memberData.password.length < 6) {
+            showNotification('A senha deve ter pelo menos 6 caracteres', 'error');
+            return;
+        }
+        
+        showNotification('Adicionando novo membro...', 'info');
+        
+        // Simular salvamento
+        setTimeout(() => {
+            closeModal('newMemberModal');
+            showNotification('✅ Membro da equipa adicionado com sucesso!', 'success');
+            
+            // Recarregar lista de membros
+            this.loadTeamMembers();
+        }, 1500);
+    },
+
+    editMember: function(memberId) {
+        console.log('✏️ Editando membro da equipa:', memberId);
+        showNotification('Funcionalidade de editar membro em desenvolvimento', 'info');
+    },
+
+    deleteMember: function(memberId, memberName = '') {
+        console.log('🗑️ Excluindo membro da equipa:', memberId, memberName);
+        
+        if (!confirm(`Tem certeza que deseja excluir o membro "${memberName}"? Esta ação não pode ser desfeita.`)) {
+            return;
+        }
+        
+        showNotification('Membro excluído (simulação)', 'success');
+        this.loadTeamMembers();
+    },
+
+    deactivateMember: function(memberId) {
+        console.log('🔒 Desativando membro da equipa:', memberId);
+        
+        if (confirm('Desativar este membro da equipa? Ele não poderá acessar o sistema.')) {
+            showNotification('Membro desativado (simulação)', 'success');
+            this.loadTeamMembers();
+        }
+    },
+
+    activateMember: function(memberId) {
+        console.log('🔓 Ativando membro da equipa:', memberId);
+        
+        if (confirm('Ativar este membro da equipa? Ele terá acesso ao sistema novamente.')) {
+            showNotification('Membro ativado (simulação)', 'success');
+            this.loadTeamMembers();
+        }
+    }
+};
+
+// ==============================================
+// FUNÇÕES DE CONFIGURAÇÕES
+// ==============================================
+
+const Settings = {
+    init: function() {
+        console.log('⚙️ Módulo de configurações inicializado');
+        this.loadSettings();
+        this.setupEventListeners();
+    },
+
+    loadSettings: function() {
+        // Carregar configurações do localStorage
+        const settings = JSON.parse(localStorage.getItem('bizzflow_settings') || '{}');
+        
+        // Preencher formulários
+        this.fillSettingsForm(settings);
+    },
+
+    fillSettingsForm: function(settings) {
+        // Configurações gerais
+        if (settings.company_name) {
+            document.getElementById('companyName')?.value = settings.company_name;
+        }
+        if (settings.company_email) {
+            document.getElementById('companyEmail')?.value = settings.company_email;
+        }
+        if (settings.company_phone) {
+            document.getElementById('companyPhone')?.value = settings.company_phone;
+        }
+        
+        // Configurações de sistema
+        if (settings.currency) {
+            document.getElementById('currency')?.value = settings.currency;
+        }
+        if (settings.language) {
+            document.getElementById('language')?.value = settings.language;
+        }
+        if (settings.timezone) {
+            document.getElementById('timezone')?.value = settings.timezone;
+        }
+    },
+
+    setupEventListeners: function() {
+        // Salvar configurações gerais
+        const saveGeneralBtn = document.getElementById('saveGeneralSettings');
+        if (saveGeneralBtn) {
+            saveGeneralBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.saveGeneralSettings();
+            });
+        }
+
+        // Salvar configurações de sistema
+        const saveSystemBtn = document.getElementById('saveSystemSettings');
+        if (saveSystemBtn) {
+            saveSystemBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.saveSystemSettings();
+            });
+        }
+
+        // Backup de dados
+        const backupBtn = document.getElementById('backupData');
+        if (backupBtn) {
+            backupBtn.addEventListener('click', () => this.backupData());
+        }
+
+        // Restaurar dados
+        const restoreBtn = document.getElementById('restoreData');
+        if (restoreBtn) {
+            restoreBtn.addEventListener('click', () => this.restoreData());
+        }
+    },
+
+    saveGeneralSettings: function() {
+        const settings = {
+            company_name: document.getElementById('companyName')?.value || '',
+            company_email: document.getElementById('companyEmail')?.value || '',
+            company_phone: document.getElementById('companyPhone')?.value || '',
+            company_address: document.getElementById('companyAddress')?.value || '',
+            company_city: document.getElementById('companyCity')?.value || '',
+            company_province: document.getElementById('companyProvince')?.value || ''
+        };
+
+        this.saveSettings('general', settings);
+    },
+
+    saveSystemSettings: function() {
+        const settings = {
+            currency: document.getElementById('currency')?.value || 'MZN',
+            language: document.getElementById('language')?.value || 'pt',
+            timezone: document.getElementById('timezone')?.value || 'Africa/Maputo',
+            date_format: document.getElementById('dateFormat')?.value || 'dd/MM/yyyy',
+            items_per_page: document.getElementById('itemsPerPage')?.value || 20,
+            low_stock_threshold: document.getElementById('lowStockThreshold')?.value || 10
+        };
+
+        this.saveSettings('system', settings);
+    },
+
+    saveSettings: function(category, settings) {
+        // Obter configurações existentes
+        const allSettings = JSON.parse(localStorage.getItem('bizzflow_settings') || '{}');
+        
+        // Atualizar categoria
+        allSettings[category] = settings;
+        
+        // Salvar no localStorage
+        localStorage.setItem('bizzflow_settings', JSON.stringify(allSettings));
+        
+        showNotification('✅ Configurações salvas com sucesso!', 'success');
+        
+        // Aplicar configurações imediatamente
+        this.applySettings(settings);
+    },
+
+    applySettings: function(settings) {
+        // Aplicar configurações de moeda
+        if (settings.currency) {
+            // Atualizar formatação de moeda (implementação futura)
+            console.log('Moeda alterada para:', settings.currency);
+        }
+        
+        // Aplicar configurações de idioma (implementação futura)
+        if (settings.language) {
+            // Mudar idioma da interface
+            console.log('Idioma alterado para:', settings.language);
+        }
+    },
+
+    backupData: function() {
+        showNotification('📂 Criando backup dos dados...', 'info');
+        
+        // Coletar dados do localStorage
+        const backupData = {
+            token: localStorage.getItem('token'),
+            user: localStorage.getItem('user'),
+            settings: localStorage.getItem('bizzflow_settings'),
+            saleItems: localStorage.getItem('saleItems'),
+            timestamp: new Date().toISOString()
+        };
+        
+        // Criar arquivo de backup
+        const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        // Criar link para download
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `bizzflow-backup-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        showNotification('✅ Backup criado com sucesso!', 'success');
+    },
+
+    restoreData: function() {
+        showNotification('Esta funcionalidade será implementada em breve', 'info');
+    }
+};
+
+// ==============================================
 // FUNÇÕES DE NAVEGAÇÃO E PÁGINAS
 // ==============================================
 
@@ -1640,8 +2662,28 @@ function updatePageData(page) {
             loadAllProducts();
             break;
             
+        case 'suppliers':
+            loadSuppliers();
+            break;
+            
+        case 'orders':
+            loadOrders();
+            break;
+            
+        case 'team':
+            if (document.getElementById('team-page')) {
+                Team.init();
+            }
+            break;
+            
         case 'reports':
             loadReportsData();
+            break;
+            
+        case 'settings':
+            if (document.getElementById('settings-page')) {
+                Settings.init();
+            }
             break;
             
         default:
@@ -1687,6 +2729,9 @@ function showPage(pageId) {
         // Atualizar título da página
         updatePageTitle(pageId);
         
+        // Salvar página atual
+        localStorage.setItem('currentPage', pageId);
+        
         console.log(`✅ Página ${pageId} exibida`);
     } else {
         console.error(`❌ Página #${pageId}-page não encontrada`);
@@ -1704,6 +2749,9 @@ function updatePageTitle(pageId) {
         'sales': 'Vendas',
         'clients': 'Clientes',
         'products': 'Produtos',
+        'suppliers': 'Fornecedores',
+        'orders': 'Encomendas',
+        'team': 'Equipa',
         'reports': 'Relatórios',
         'settings': 'Configurações'
     };
@@ -1864,6 +2912,24 @@ function setupEventListeners() {
         });
     }
     
+    // Botão "Novo Fornecedor"
+    const newSupplierBtn = document.getElementById('new-supplier-btn');
+    if (newSupplierBtn) {
+        newSupplierBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            openNewSupplierModal();
+        });
+    }
+    
+    // Botão "Nova Encomenda"
+    const newOrderBtn = document.getElementById('new-order-btn');
+    if (newOrderBtn) {
+        newOrderBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            openNewOrderModal();
+        });
+    }
+    
     console.log('✅ Event listeners configurados');
 }
 
@@ -1976,6 +3042,7 @@ if (document.readyState === 'loading') {
 // EXPORTAÇÃO DE FUNÇÕES PARA ESCOPO GLOBAL
 // ==============================================
 
+// Funções de Vendas
 window.updateSaleSummary = updateSaleSummary;
 window.updateSaleItemsTable = updateSaleItemsTable;
 window.adjustSaleQuantity = adjustSaleQuantity;
@@ -1986,22 +3053,51 @@ window.loadAllSales = loadAllSales;
 window.viewSale = viewSale;
 window.deleteSale = deleteSale;
 window.completeSale = completeSale;
+
+// Funções de Clientes
 window.loadAllClients = loadAllClients;
 window.updateClientsTable = updateClientsTable;
 window.editClient = editClient;
 window.saveClientChanges = saveClientChanges;
 window.deleteClient = deleteClient;
+
+// Funções de Produtos
 window.loadAllProducts = loadAllProducts;
 window.updateProductsTable = updateProductsTable;
 window.editProduct = editProduct;
 window.saveProductChanges = saveProductChanges;
 window.deleteProduct = deleteProduct;
+
+// Funções de Fornecedores
+window.openNewSupplierModal = openNewSupplierModal;
+window.saveNewSupplier = saveNewSupplier;
+window.loadSuppliers = loadSuppliers;
+window.editSupplier = editSupplier;
+window.deleteSupplier = deleteSupplier;
+
+// Funções de Encomendas
+window.openNewOrderModal = openNewOrderModal;
+window.addOrderProduct = addOrderProduct;
+window.removeOrderProduct = removeOrderProduct;
+window.saveNewOrder = saveNewOrder;
+window.loadOrders = loadOrders;
+window.viewOrderDetails = viewOrderDetails;
+window.markOrderDelivered = markOrderDelivered;
+
+// Funções de Equipa
+window.Team = Team;
+
+// Funções de Dashboard
 window.loadDashboardData = loadDashboardData;
 window.updateDashboardMetrics = updateDashboardMetrics;
+
+// Funções de Navegação
 window.updatePageData = updatePageData;
 window.showPage = showPage;
 window.updatePageTitle = updatePageTitle;
 window.loadReportsData = loadReportsData;
+
+// Funções Auxiliares
 window.showNotification = showNotification;
 window.closeModal = closeModal;
 window.formatCurrency = formatCurrency;
@@ -2010,4 +3106,7 @@ window.getPaymentMethodLabel = getPaymentMethodLabel;
 window.getStatusLabel = getStatusLabel;
 window.printSale = printSale;
 
-console.log('🎉 functions.js v2.0 carregado com sucesso! Todas as funções disponíveis.');
+// Funções de Configurações
+window.Settings = Settings;
+
+console.log('🎉 functions.js v4.0 carregado com sucesso! Todas as funções disponíveis.');
